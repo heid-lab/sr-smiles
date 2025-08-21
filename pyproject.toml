@@ -1,0 +1,25 @@
+[project]
+name = "cgr-smiles"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Charlotte Gerhaher",email = "charlotte.gerhaher@tuwien.ac.at"}
+]
+license = {text = "MIT"}
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "rdkit (>=2025.3.5,<2026.0.0)",
+    "pandas (>=2.3.2,<3.0.0)"
+]
+
+[project.optional-dependencies]
+rxnmapper = ["rxnmapper (>=0.4.2,<0.5.0)"]
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.4.1"
+
