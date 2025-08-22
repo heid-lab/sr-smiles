@@ -63,7 +63,9 @@ def augment_reassign_atom_map_nums(rxn_smiles: str) -> str:
     atom_nums = [a.GetAtomMapNum() for a in mol_reac.GetAtoms()]
     atom_nums_shuffled = random.sample(atom_nums, k=len(atom_nums))
 
-    atom_num_old2new = {old_num: new_num for old_num, new_num in zip(atom_nums, atom_nums_shuffled)}
+    atom_num_old2new = {
+        old_num: new_num for old_num, new_num in zip(atom_nums, atom_nums_shuffled)
+    }
 
     for atom in mol_reac.GetAtoms():
         atom.SetAtomMapNum(atom_num_old2new[atom.GetAtomMapNum()])
@@ -77,7 +79,9 @@ def augment_reassign_atom_map_nums(rxn_smiles: str) -> str:
     return ">>".join([r_smi_shuffled, p_smi_shuffled])
 
 
-def augment_rxn_smiles(rxn_smiles, aug_atom_traversal_order: bool, aug_atom_mapping: bool) -> str:
+def augment_rxn_smiles(
+    rxn_smiles, aug_atom_traversal_order: bool, aug_atom_mapping: bool
+) -> str:
     """
     Applies augmentation to a reaction SMILES by optionally shuffling atom order
     and/or reassigning atom map numbers.

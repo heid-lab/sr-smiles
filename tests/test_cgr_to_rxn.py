@@ -205,7 +205,10 @@ def test_update_cis_trans_stereo_chem_cis_update():
 
     modified_mol = update_cis_trans_stereo_chem(mol, parsed_bonds_data)
     modified_smiles = Chem.MolToSmiles(modified_mol, canonical=False)
-    assert modified_smiles == "[c:1]1([CH2:9]/[N:10]=[N:11]\\[CH3:12])[n:2][n:3][cH:4][n:5][n:6]1"
+    assert (
+        modified_smiles
+        == "[c:1]1([CH2:9]/[N:10]=[N:11]\\[CH3:12])[n:2][n:3][cH:4][n:5][n:6]1"
+    )
 
 
 def test_update_cis_trans_stereo_chem_trans_update():
@@ -231,7 +234,10 @@ def test_update_cis_trans_stereo_chem_trans_update():
 
     modified_mol = update_cis_trans_stereo_chem(mol, parsed_bonds_data)
     modified_smiles = Chem.MolToSmiles(modified_mol, canonical=False)
-    assert modified_smiles == "[c:1]1([CH2:9]/[N:10]=[N:11]/[CH3:12])[n:2][n:3][cH:4][n:5][n:6]1"
+    assert (
+        modified_smiles
+        == "[c:1]1([CH2:9]/[N:10]=[N:11]/[CH3:12])[n:2][n:3][cH:4][n:5][n:6]1"
+    )
 
 
 def test_update_cis_trans_stereo_chem_with_disconnected_molecule():
@@ -257,7 +263,10 @@ def test_update_cis_trans_stereo_chem_with_disconnected_molecule():
 
     modified_mol = update_cis_trans_stereo_chem(mol, parsed_bonds_data)
     modified_smiles = Chem.MolToSmiles(modified_mol, canonical=False)
-    assert modified_smiles == "[c:1]1([CH2:9]/[N:10]=[N:11]/[CH3:12])[n:2][n:3][cH:4][n:5][n:6]1.[CH4:13]"
+    assert (
+        modified_smiles
+        == "[c:1]1([CH2:9]/[N:10]=[N:11]/[CH3:12])[n:2][n:3][cH:4][n:5][n:6]1.[CH4:13]"
+    )
 
 
 def test_get_reac_prod_scaffold_smiles_from_cgr():

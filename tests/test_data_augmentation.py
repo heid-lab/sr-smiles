@@ -22,19 +22,27 @@ def rxn_smiles() -> str:
 def mols_equal(smiles1, smiles2):
     mol1 = make_mol(smiles1)
     mol2 = make_mol(smiles2)
-    return Chem.MolToSmiles(mol1, canonical=True) == Chem.MolToSmiles(mol2, canonical=True)
+    return Chem.MolToSmiles(mol1, canonical=True) == Chem.MolToSmiles(
+        mol2, canonical=True
+    )
 
 
 def test_augment_atom_traversal_order(rxn_smiles):
     aug_rxn_smiles = augment_atom_traversal_order(rxn_smiles)
 
-    assert rxn_smiles != aug_rxn_smiles, "Augmentation did not change the rxn smiles string."
+    assert (
+        rxn_smiles != aug_rxn_smiles
+    ), "Augmentation did not change the rxn smiles string."
 
     r, _, p = rxn_smiles.split(">")
     r_aug, _, p_aug = aug_rxn_smiles.split(">")
 
-    assert mols_equal(r, r_aug), "Augmented reac mol is not the same as the original reac mol."
-    assert mols_equal(p, p_aug), "Augmented prod mol is not the same as the original prod mol."
+    assert mols_equal(
+        r, r_aug
+    ), "Augmented reac mol is not the same as the original reac mol."
+    assert mols_equal(
+        p, p_aug
+    ), "Augmented prod mol is not the same as the original prod mol."
 
 
 def test_augment_atom_traversal_order_deterministic(rxn_smiles):
@@ -44,22 +52,26 @@ def test_augment_atom_traversal_order_deterministic(rxn_smiles):
     rng_run1 = random.Random(initial_seed)
     results_run1 = []
     for _ in range(num_augmentation):
-        results_run1.append(augment_atom_traversal_order(rxn_smiles, random_state=rng_run1))
+        results_run1.append(
+            augment_atom_traversal_order(rxn_smiles, random_state=rng_run1)
+        )
 
     # check that results within the first run differ from each other
-    assert len(set(results_run1)) == len(results_run1), (
-        "Augmentations from the same RNG instance should be unique, but duplicates were found."
-    )
+    assert (
+        len(set(results_run1)) == len(results_run1)
+    ), "Augmentations from the same RNG instance should be unique, but duplicates were found."
 
     rng_run2 = random.Random(initial_seed)
     results_run2 = []
     for _ in range(num_augmentation):
-        results_run2.append(augment_atom_traversal_order(rxn_smiles, random_state=rng_run2))
+        results_run2.append(
+            augment_atom_traversal_order(rxn_smiles, random_state=rng_run2)
+        )
 
     # check that the entire sequence of results from run1 matches run2
-    assert results_run1 == results_run2, (
-        "Augmentations with the same RNG seed should produce identical sequences, but differences were found."
-    )
+    assert (
+        results_run1 == results_run2
+    ), "Augmentations with the same RNG seed should produce identical sequences, but differences were found."
 
 
 def get_atom_map_nums(smi: str) -> list[int]:
@@ -77,7 +89,9 @@ def test_augment_reassign_atom_map_nums(rxn_smiles):
     # assert atom map counts are unchanged and values are same in reactant/product
     assert Counter(reac_nums) == Counter(prod_nums)
     assert len(set(reac_nums)) == len(reac_nums), "Atom map numbers should be unique."
-    assert reac_nums != get_atom_map_nums(rxn_smiles.split(">")[0]), "Atom maps have not been reassigned."
+    assert reac_nums != get_atom_map_nums(
+        rxn_smiles.split(">")[0]
+    ), "Atom maps have not been reassigned."
 
 
 @pytest.mark.parametrize(
@@ -104,6 +118,6 @@ def test_augment_rxn_smiles_parametrized(
     if should_differ:
         assert rxn_smiles != augmented, "Augmented SMILES should differ from original"
     else:
-        assert rxn_smiles == augmented, (
-            "Augmentation was set to `False, output should not differ from original"
-        )
+        assert (
+            rxn_smiles == augmented
+        ), "Augmentation was set to `False, output should not differ from original"

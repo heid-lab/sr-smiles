@@ -1,5 +1,7 @@
 import pandas as pd
 import pytest
+import csv
+import os
 
 from cgr_smiles.cgr_to_rxn import cgrsmiles_to_rxnsmiles
 from cgr_smiles.rxn_to_cgr import rxnsmiles_to_cgrsmiles
@@ -36,8 +38,6 @@ def generate_individual_tests():
 
 test_cases, ids = generate_individual_tests()
 
-import csv
-import os
 
 @pytest.mark.parametrize("file_path, idx, rxn_smiles, rxn_col", test_cases, ids=ids)
 def test_roundtrip_per_sample(file_path, idx, rxn_smiles, rxn_col):
@@ -53,16 +53,16 @@ def test_roundtrip_per_sample(file_path, idx, rxn_smiles, rxn_col):
         file = "/home/charlotte.gerhaher/projects/chemtorch/tests/data/failed_testcases_25-08-11.csv"
         # Check if file exists to decide whether to write header
         file_exists = os.path.isfile(file)
-        
+
         with open(file, mode="a", newline="") as f:
             writer = csv.writer(f)
             if not file_exists:
                 writer.writerow(["dataset", "idx", "rxn_smiles", "cgr"])
             writer.writerow([file_path, idx, rxn_smiles, cgr])
-            
-    assert res_can == rxn_can, (
-        f"Mismatch at {file_path}:{idx}, cgr={cgr}, rxn_can={rxn_can}, res_can={res_can}"
-    )
+
+    assert (
+        res_can == rxn_can
+    ), f"Mismatch at {file_path}:{idx}, cgr={cgr}, rxn_can={rxn_can}, res_can={res_can}"
 
 
 # @pytest.mark.parametrize(

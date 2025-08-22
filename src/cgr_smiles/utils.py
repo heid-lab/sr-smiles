@@ -5,7 +5,6 @@ from typing import Iterator, Optional
 
 import rdkit
 from rdkit import Chem
-from rdkit.Chem import rdMolDescriptors
 
 ROOT_DIR = Path(__file__).parent.parent.parent
 
@@ -100,7 +99,7 @@ def _tokenize(smiles: str) -> Iterator[tuple[TokenType, int, str | int]]:
             digit2 = next(s_iter, "")
             if not (digit1 and digit2 and digit1.isdigit() and digit2.isdigit()):
                 raise ValueError(f"Malformed two-digit ring number at index {idx}")
-            yield TokenType.RING_NUM, idx, f"%{digit1}{digit2}" 
+            yield TokenType.RING_NUM, idx, f"%{digit1}{digit2}"
         elif char in ("/", "\\"):
             yield TokenType.EZSTEREO, idx, char
         # elif char in ("@", "@@"):
@@ -133,7 +132,7 @@ def remove_atom_mapping(rxn_smiles: str) -> str:
         if tokentype == TokenType.ATOM:
             token_val = re.sub(r":\d+", "", token_val)
         toks.append(str(token_val))
-        
+
     return "".join(toks)
 
 
@@ -151,7 +150,9 @@ def remove_redundant_square_brackets(rxn_smiles: str) -> str:
     Returns:
         str: Reaction SMILES string with unnecessary square brackets removed.
     """
-    escaped_subset = [re.escape(elem) for elem in sorted(ORGANIC_SUBSET, key=len, reverse=True)]
+    escaped_subset = [
+        re.escape(elem) for elem in sorted(ORGANIC_SUBSET, key=len, reverse=True)
+    ]
     pattern = rf"\[({'|'.join(escaped_subset)})\]"
 
     def replacer(match):
@@ -160,94 +161,94 @@ def remove_redundant_square_brackets(rxn_smiles: str) -> str:
     return re.sub(pattern, replacer, rxn_smiles)
 
 
-def remove_non_participating_hydrogens(reaction_smiles: str) -> str:
-    # TODO: currently, this only removes hydrogens, when atom mappings are removed!!
-    # which doesn't make sense, because how can we then map a hydrogen and tell
-    # if it is participating in the reaction or not.
-    # TODO: Another problem, we don't actually identify participating hydrogens. We just skip
-    # reaction SMILES if they are unbalanced, otherwise we sub all the patterns listed below.
-    """
-    Removes explicit hydrogens that are not participating in the reaction from a reaction SMILES,
-    while preserving atom order and structure.
+# def remove_non_participating_hydrogens(reaction_smiles: str) -> str:
+#     # TODO: currently, this only removes hydrogens, when atom mappings are removed!!
+#     # which doesn't make sense, because how can we then map a hydrogen and tell
+#     # if it is participating in the reaction or not.
+#     # TODO: Another problem, we don't actually identify participating hydrogens. We just skip
+#     # reaction SMILES if they are unbalanced, otherwise we sub all the patterns listed below.
+#     """
+#     Removes explicit hydrogens that are not participating in the reaction from a reaction SMILES,
+#     while preserving atom order and structure.
 
-    Assumes a reaction SMILES without atom mapping.
+#     Assumes a reaction SMILES without atom mapping.
 
-    Args:
-        reaction_smiles (str): A reaction SMILES string in the form 'reactants>>products'.
+#     Args:
+#         reaction_smiles (str): A reaction SMILES string in the form 'reactants>>products'.
 
-    Returns:
-        str: A modified reaction SMILES with non-essential explicit hydrogens removed,
-             or the original input if H counts differ or parsing fails.
-    """
-    try:
-        reactants_smiles, products_smiles = reaction_smiles.split(">>")
+#     Returns:
+#         str: A modified reaction SMILES with non-essential explicit hydrogens removed,
+#              or the original input if H counts differ or parsing fails.
+#     """
+#     try:
+#         reactants_smiles, products_smiles = reaction_smiles.split(">>")
 
-        # parse reactants and products to get H counts
-        reactants_mol = Chem.MolFromSmiles(reactants_smiles)
-        products_mol = Chem.MolFromSmiles(products_smiles)
+#         # parse reactants and products to get H counts
+#         reactants_mol = Chem.MolFromSmiles(reactants_smiles)
+#         products_mol = Chem.MolFromSmiles(products_smiles)
 
-        if reactants_mol is None or products_mol is None:
-            return reaction_smiles
+#         if reactants_mol is None or products_mol is None:
+#             return reaction_smiles
 
-        # get molecular formulas to check if H count changes
-        reactants_formula = rdMolDescriptors.CalcMolFormula(reactants_mol)
-        products_formula = rdMolDescriptors.CalcMolFormula(products_mol)
+#         # get molecular formulas to check if H count changes
+#         reactants_formula = rdMolDescriptors.CalcMolFormula(reactants_mol)
+#         products_formula = rdMolDescriptors.CalcMolFormula(products_mol)
 
-        # extract hydrogen counts
-        def get_h_count(formula):
-            h_match = re.search(r"H(\d*)", formula)
-            if h_match:
-                return int(h_match.group(1)) if h_match.group(1) else 1
-            return 0
+#         # extract hydrogen counts
+#         def get_h_count(formula):
+#             h_match = re.search(r"H(\d*)", formula)
+#             if h_match:
+#                 return int(h_match.group(1)) if h_match.group(1) else 1
+#             return 0
 
-        reactants_h = get_h_count(reactants_formula)
-        products_h = get_h_count(products_formula)
+#         reactants_h = get_h_count(reactants_formula)
+#         products_h = get_h_count(products_formula)
 
-        # if hydrogen count changes, keep explicit H"s that might be involved
-        if reactants_h != products_h:
-            print(f"H count changes: {reactants_h} -> {products_h}, keeping explicit H's")
-            return reaction_smiles
+#         # if hydrogen count changes, keep explicit H"s that might be involved
+#         if reactants_h != products_h:
+#             print(f"H count changes: {reactants_h} -> {products_h}, keeping explicit H's")
+#             return reaction_smiles
 
-        # if H count is conserved, remove non-essential explicit H"s using regex
-        # this preserves atom order unlike RDKit canonicalization
-        def clean_component_preserve_order(smiles):
-            result = smiles
+#         # if H count is conserved, remove non-essential explicit H"s using regex
+#         # this preserves atom order unlike RDKit canonicalization
+#         def clean_component_preserve_order(smiles):
+#             result = smiles
 
-            # fixed patterns - remove the overly restrictive lookaheads
-            safe_patterns = [
-                (r"\[CH3\]", "[C]"),  # [CH3] -> C
-                (r"\[CH2\]", "[C]"),  # [CH2] -> C
-                (r"\[CH\]", "[C]"),  # [CH] -> C (removed the (?![0-9]))
-                (r"\[C\]", "[C]"),  # [C] -> C (removed the (?![0-9]))
-                (r"\[OH2\](?![+-])", "[O]"),
-                (r"\[OH\](?![+-])", "[O]"),
-                (r"\[O\](?![+-])", "[O]"),
-                (r"\[NH3\](?![+-])", "[N]"),
-                (r"\[NH2\](?![+-])", "[N]"),
-                (r"\[NH\](?![+-])", "[N]"),
-                (r"\[N\](?![+-])", "[N]"),
-                (r"\[SH2\](?![+-])", "[S]"),
-                (r"\[SH\](?![+-])", "[S]"),
-                (r"\[S\](?![+-])", "[S]"),
-            ]
+#             # fixed patterns - remove the overly restrictive lookaheads
+#             safe_patterns = [
+#                 (r"\[CH3\]", "[C]"),  # [CH3] -> C
+#                 (r"\[CH2\]", "[C]"),  # [CH2] -> C
+#                 (r"\[CH\]", "[C]"),  # [CH] -> C (removed the (?![0-9]))
+#                 (r"\[C\]", "[C]"),  # [C] -> C (removed the (?![0-9]))
+#                 (r"\[OH2\](?![+-])", "[O]"),
+#                 (r"\[OH\](?![+-])", "[O]"),
+#                 (r"\[O\](?![+-])", "[O]"),
+#                 (r"\[NH3\](?![+-])", "[N]"),
+#                 (r"\[NH2\](?![+-])", "[N]"),
+#                 (r"\[NH\](?![+-])", "[N]"),
+#                 (r"\[N\](?![+-])", "[N]"),
+#                 (r"\[SH2\](?![+-])", "[S]"),
+#                 (r"\[SH\](?![+-])", "[S]"),
+#                 (r"\[S\](?![+-])", "[S]"),
+#             ]
 
-            for pattern, replacement in safe_patterns:
-                result = re.sub(pattern, replacement, result)
+#             for pattern, replacement in safe_patterns:
+#                 result = re.sub(pattern, replacement, result)
 
-            return result
+#             return result
 
-        # process reactants and products while preserving order
-        reactant_components = [clean_component_preserve_order(r.strip()) for r in reactants_smiles.split(".")]
-        clean_reactants = ".".join([r for r in reactant_components if r])
+#         # process reactants and products while preserving order
+#         reactant_components = [clean_component_preserve_order(r.strip()) for r in reactants_smiles.split(".")]
+#         clean_reactants = ".".join([r for r in reactant_components if r])
 
-        product_components = [clean_component_preserve_order(p.strip()) for p in products_smiles.split(".")]
-        clean_products = ".".join([p for p in product_components if p])
+#         product_components = [clean_component_preserve_order(p.strip()) for p in products_smiles.split(".")]
+#         clean_products = ".".join([p for p in product_components if p])
 
-        return f"{clean_reactants}>>{clean_products}"
+#         return f"{clean_reactants}>>{clean_products}"
 
-    except Exception as e:
-        print(f"Error processing reaction: {e}, reaction={reaction_smiles}")
-        return reaction_smiles
+#     except Exception as e:
+#         print(f"Error processing reaction: {e}, reaction={reaction_smiles}")
+#         return reaction_smiles
 
 
 def parse_bonds_in_order_from_smiles(smiles: str) -> dict[tuple[int, int], str]:
@@ -281,24 +282,33 @@ def parse_bonds_in_order_from_smiles(smiles: str) -> dict[tuple[int, int], str]:
             # Extract atom map number or assign a temporary one if none.
             atom_map_match = re.search(r":(\d+)", str(token_val))
             current_atom_map_num = (
-                int(atom_map_match.group(1)) if atom_map_match else (current_logical_idx + 1000)
+                int(atom_map_match.group(1))
+                if atom_map_match
+                else (current_logical_idx + 1000)
             )
 
             logical_idx_to_map_num[current_logical_idx] = current_atom_map_num
 
             if anchor_logical_idx is not None:
                 # We have a bond between anchor_logical_idx and current_logical_idx
-                bond_map_num_pair = (logical_idx_to_map_num[anchor_logical_idx], current_atom_map_num)
+                bond_map_num_pair = (
+                    logical_idx_to_map_num[anchor_logical_idx],
+                    current_atom_map_num,
+                )
 
                 # Determine the bond specification
                 # If next_bond_specifier is None, it implies a single bond by default.
-                bond_val = next_bond_specifier if next_bond_specifier is not None else "-"
+                bond_val = (
+                    next_bond_specifier if next_bond_specifier is not None else "-"
+                )
 
                 # Store the bond
                 replace_dict_bonds[bond_map_num_pair] = bond_val
 
             current_logical_idx += 1
-            anchor_logical_idx = current_logical_idx - 1  # This new atom becomes the anchor for next bond
+            anchor_logical_idx = (
+                current_logical_idx - 1
+            )  # This new atom becomes the anchor for next bond
             next_bond_specifier = None  # Clear any pending bond specifier
 
         elif tokentype == TokenType.BOND_TYPE or tokentype == TokenType.EZSTEREO:
@@ -310,17 +320,21 @@ def parse_bonds_in_order_from_smiles(smiles: str) -> dict[tuple[int, int], str]:
 
         elif tokentype == TokenType.BRANCH_END:
             if not branches:
-                raise ValueError(f"Unmatched ')' in SMILES string at index {token_original_idx}")
+                raise ValueError(
+                    f"Unmatched ')' in SMILES string at index {token_original_idx}"
+                )
             anchor_logical_idx = branches.pop()  # Pop anchor from stack
-            next_bond_specifier = (
-                None  # Branch closure typically implies implicit single bond if no explicit one.
-            )
+            next_bond_specifier = None  # Branch closure typically implies implicit single bond if no explicit one.
 
         elif tokentype == TokenType.RING_NUM:
             ring_num_val = str(token_val)  # Ring numbers can be int or string (for %XX)
 
-            if ring_num_val in ring_open_bonds:  # Ring closure (we found a matching number)
-                logical_idx_opener, bond_opener_specifier = ring_open_bonds[ring_num_val]
+            if (
+                ring_num_val in ring_open_bonds
+            ):  # Ring closure (we found a matching number)
+                logical_idx_opener, bond_opener_specifier = ring_open_bonds[
+                    ring_num_val
+                ]
 
                 # Bond is between the current atom (which is anchor_logical_idx) and the atom that opened the ring
                 bond_map_num_pair = (
@@ -334,7 +348,11 @@ def parse_bonds_in_order_from_smiles(smiles: str) -> dict[tuple[int, int], str]:
                 bond_val = (
                     next_bond_specifier
                     if next_bond_specifier is not None
-                    else (bond_opener_specifier if bond_opener_specifier is not None else "-")
+                    else (
+                        bond_opener_specifier
+                        if bond_opener_specifier is not None
+                        else "-"
+                    )
                 )
 
                 # Store the bond
@@ -344,7 +362,10 @@ def parse_bonds_in_order_from_smiles(smiles: str) -> dict[tuple[int, int], str]:
                 next_bond_specifier = None  # Clear any pending bond specifier
 
             else:
-                ring_open_bonds[ring_num_val] = (anchor_logical_idx, next_bond_specifier)
+                ring_open_bonds[ring_num_val] = (
+                    anchor_logical_idx,
+                    next_bond_specifier,
+                )
                 next_bond_specifier = None
 
     return replace_dict_bonds
@@ -390,7 +411,9 @@ def extract_chiral_tag_by_atom_map_num(smiles: str, atom_map_num: int) -> str:
         >>> extract_chiral_tag_by_atom_map_num("[C@H:1](F)Cl", 1)
         '@'
     """
-    atom_tokens = [tok for tok_type, _, tok in _tokenize(smiles) if tok_type == TokenType.ATOM]
+    atom_tokens = [
+        tok for tok_type, _, tok in _tokenize(smiles) if tok_type == TokenType.ATOM
+    ]
     for tok in atom_tokens:
         match = re.search(r":(\d+)\]", tok)
         if match:
@@ -562,38 +585,44 @@ def make_mol(smi: str, sanitize: bool = True) -> Chem.Mol:
     if sanitize:
         Chem.SanitizeMol(
             mol,
-            sanitizeOps=Chem.SanitizeFlags.SANITIZE_ALL ^ Chem.SanitizeFlags.SANITIZE_ADJUSTHS,
+            sanitizeOps=Chem.SanitizeFlags.SANITIZE_ALL
+            ^ Chem.SanitizeFlags.SANITIZE_ADJUSTHS,
         )
     Chem.AssignStereochemistry(mol)
 
     try:
         test_mol = Chem.Mol(mol)  # make a copy
         # Chem.Kekulize(test_mol)
-        rdkit.RDLogger.DisableLog('rdApp.error')
+        rdkit.RDLogger.DisableLog("rdApp.error")
         Chem.Kekulize(test_mol)
-        rdkit.RDLogger.EnableLog('rdApp.error')
-    
+        rdkit.RDLogger.EnableLog("rdApp.error")
+
     except Chem.KekulizeException:
         # workaround to prevent aromatic [nH] from being converted to [n]
         mol = Chem.MolFromSmiles(smi, sanitize=False)
         # record which atoms had explicit H
-        mol.UpdatePropertyCache(strict=False)            
-        nH_atoms = {atom.GetIdx() for atom in mol.GetAtoms() if atom.GetSymbol() == "N" and atom.GetTotalNumHs() > 0}
-        
+        mol.UpdatePropertyCache(strict=False)
+        nH_atoms = {
+            atom.GetIdx()
+            for atom in mol.GetAtoms()
+            if atom.GetSymbol() == "N" and atom.GetTotalNumHs() > 0
+        }
+
         if sanitize:
             Chem.SanitizeMol(
                 mol,
-                sanitizeOps=Chem.SanitizeFlags.SANITIZE_ALL ^ Chem.SanitizeFlags.SANITIZE_ADJUSTHS
+                sanitizeOps=Chem.SanitizeFlags.SANITIZE_ALL
+                ^ Chem.SanitizeFlags.SANITIZE_ADJUSTHS,
             )
         Chem.AssignStereochemistry(mol)
-        
+
         # re-add explicit H to those atoms
         for idx in nH_atoms:
             atom = mol.GetAtomWithIdx(idx)
             if atom.GetTotalNumHs() == 0:
                 atom.SetNumExplicitHs(1)
                 atom.UpdatePropertyCache()
-        
+
     return mol
 
 
@@ -626,8 +655,13 @@ def map_reac_to_prod(mol_reac: Chem.Mol, mol_prod: Chem.Mol) -> dict[int, int]:
     Returns:
         dict[int, int]: A dictionary mapping reactant atom indices (keys) to corresponding product atom indices (values).
     """
-    prod_map_to_id = {atom.GetAtomMapNum(): atom.GetIdx() for atom in mol_prod.GetAtoms()}
-    reac_id_to_prod_id = {atom.GetIdx(): prod_map_to_id[atom.GetAtomMapNum()] for atom in mol_reac.GetAtoms()}
+    prod_map_to_id = {
+        atom.GetAtomMapNum(): atom.GetIdx() for atom in mol_prod.GetAtoms()
+    }
+    reac_id_to_prod_id = {
+        atom.GetIdx(): prod_map_to_id[atom.GetAtomMapNum()]
+        for atom in mol_reac.GetAtoms()
+    }
     return reac_id_to_prod_id
 
 
@@ -643,9 +677,9 @@ def get_atom_map_num(mol: Chem.Mol, atom_idx: int) -> int:
         int: The atom mapping number of the specified atom.
     """
     num_atoms = mol.GetNumAtoms()
-    assert 0 <= atom_idx < mol.GetNumAtoms(), (
-        f"Error: Atom index {atom_idx} is out of bounds for mol with {num_atoms} atoms."
-    )
+    assert (
+        0 <= atom_idx < mol.GetNumAtoms()
+    ), f"Error: Atom index {atom_idx} is out of bounds for mol with {num_atoms} atoms."
 
     atom = mol.GetAtomWithIdx(atom_idx)
     return atom.GetAtomMapNum()

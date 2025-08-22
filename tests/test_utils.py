@@ -18,7 +18,6 @@ from cgr_smiles.utils import (
     map_reac_to_prod,
     parse_bonds_in_order_from_smiles,
     remove_atom_mapping,
-    remove_non_participating_hydrogens,
     remove_redundant_square_brackets,
     update_all_atom_stereo,
 )
@@ -76,27 +75,29 @@ def test_remove_atom_mapping_cgr_smiles():
     """
     Test removal of atom mapping from a CGR smiles.
     """
-    rxn_smiles = "{[O:1]|[O+:1]}{=|#}{[C:2]|[C-:2]}1{-|~}[H:5]{~|-}[C:3]{-|~}1#[C:4][H:6]"
+    rxn_smiles = (
+        "{[O:1]|[O+:1]}{=|#}{[C:2]|[C-:2]}1{-|~}[H:5]{~|-}[C:3]{-|~}1#[C:4][H:6]"
+    )
     rxn_wo_am = remove_atom_mapping(rxn_smiles)
     assert rxn_wo_am == "{[O]|[O+]}{=|#}{[C]|[C-]}1{-|~}[H]{~|-}[C]{-|~}1#[C][H]"
 
 
-def test_remove_non_participating_hydrogens_unbalanced():
-    """
-    Test that the input is returned unchanged when H count changes.
-    """
-    input_rxn = "[CH3][OH]>>[CH3][O]"
-    result = remove_non_participating_hydrogens(input_rxn)
-    assert result == input_rxn
+# def test_remove_non_participating_hydrogens_unbalanced():
+#     """
+#     Test that the input is returned unchanged when H count changes.
+#     """
+#     input_rxn = "[CH3][OH]>>[CH3][O]"
+#     result = remove_non_participating_hydrogens(input_rxn)
+#     assert result == input_rxn
 
 
-def test_remove_non_participating_hydrogens_balanced():
-    """
-    Test that non-essential hydrogens are removed when H count is conserved.
-    """
-    input_rxn = "[CH3][OH]>>[CH3][O][H]"
-    result = remove_non_participating_hydrogens(input_rxn)
-    assert result == "[C][OH]>>[C][O][H]"
+# def test_remove_non_participating_hydrogens_balanced():
+#     """
+#     Test that non-essential hydrogens are removed when H count is conserved.
+#     """
+#     input_rxn = "[CH3][OH]>>[CH3][O][H]"
+#     result = remove_non_participating_hydrogens(input_rxn)
+#     assert result == "[C][OH]>>[C][O][H]"
 
 
 def test_remove_redundant_square_brackets_rxn_smiles():
@@ -283,7 +284,11 @@ test_data = [
     (
         "disconnected_mols",
         "[CH3:1].[CH3:2]",
-        [(TokenType.ATOM, "[CH3:1]"), (TokenType.BOND_TYPE, "."), (TokenType.ATOM, "[CH3:2]")],
+        [
+            (TokenType.ATOM, "[CH3:1]"),
+            (TokenType.BOND_TYPE, "."),
+            (TokenType.ATOM, "[CH3:2]"),
+        ],
     ),
     (
         "isotopes_and_charges",
@@ -320,14 +325,16 @@ test_data = [
 
 
 @pytest.mark.parametrize("test_name, smiles, expected_tokens", test_data)
-def test_tokenize_valid_smiles(test_name: str, smiles: str, expected_tokens: list[Tuple[TokenType, str]]):
+def test_tokenize_valid_smiles(
+    test_name: str, smiles: str, expected_tokens: list[Tuple[TokenType, str]]
+):
     """
     Tests the `_tokenize()` function with various valid SMILES strings.
     """
     actual_tokens = [(t[0], t[2]) for t in _tokenize(smiles)]
-    assert actual_tokens == expected_tokens, (
-        f"Test '{test_name}' failed: \nExpected: {expected_tokens}\nGot:      {actual_tokens}"
-    )
+    assert (
+        actual_tokens == expected_tokens
+    ), f"Test '{test_name}' failed: \nExpected: {expected_tokens}\nGot:      {actual_tokens}"
 
 
 # error test cases
@@ -338,7 +345,9 @@ error_test_data = [
 
 
 @pytest.mark.parametrize("test_name, smiles, expected_exception_type", error_test_data)
-def test_tokenize_invalid_smiles(test_name: str, smiles: str, expected_exception_type: type):
+def test_tokenize_invalid_smiles(
+    test_name: str, smiles: str, expected_exception_type: type
+):
     """
     Tests the `_tokenize()` function with invalid SMILES strings to ensure correct error handling.
     """
@@ -356,7 +365,9 @@ def test_update_all_atom_stereo_without_chirality_change(simple_mol):
     chiral_tag_before = chiral_atom.GetChiralTag()
 
     update_all_atom_stereo(
-        simple_mol, "[C:1][C@:2]([Cl:3])([Br:4])[I:5]", "[C:1][C@:2]([I:5])([Cl:3])[Br:4]"
+        simple_mol,
+        "[C:1][C@:2]([Cl:3])([Br:4])[I:5]",
+        "[C:1][C@:2]([I:5])([Cl:3])[Br:4]",
     )  # 2 flips
 
     chiral_tag_after = chiral_atom.GetChiralTag()
@@ -373,7 +384,9 @@ def test_update_all_atom_stereo_with_chirality_change(simple_mol):
     chiral_tag_before = chiral_atom.GetChiralTag()
 
     update_all_atom_stereo(
-        simple_mol, "[C:1][C@:2]([Cl:3])([Br:4])[I:5]", "[Cl:3][C@:2]([C:1])([Br:4])[I:5]"
+        simple_mol,
+        "[C:1][C@:2]([Cl:3])([Br:4])[I:5]",
+        "[Cl:3][C@:2]([C:1])([Br:4])[I:5]",
     )  # 1 flip
 
     chiral_tag_after = chiral_atom.GetChiralTag()
@@ -444,7 +457,9 @@ canonicalization_test_cases = [
 ]
 
 
-@pytest.mark.parametrize("test_input_rxn, expected_output_rxn", canonicalization_test_cases)
+@pytest.mark.parametrize(
+    "test_input_rxn, expected_output_rxn", canonicalization_test_cases
+)
 def test_canonicalize_variants(test_input_rxn, expected_output_rxn):
     """
     Tests that various SMILES formats are correctly canonicalized.
