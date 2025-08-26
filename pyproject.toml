@@ -24,3 +24,20 @@ build-backend = "poetry.core.masonry.api"
 pytest = "^8.4.1"
 pre-commit = "^4.3.0"
 ruff = "^0.12.10"
+mypy = "^1.17.1"
+
+[tool.ruff.lint]
+select = [
+    "D",    # docstring checks (pydocstyle)
+    "E",    # pycodestyle errors (PEP8)
+    "F",    # pyflakes errors (undefined names, unused imports)
+    "W",    # warnings (trailing whitespace, blank lines, etc.)
+    "I",    # import-related issues (optional, if you care about import order/type)
+]
+ignore = ["D100"]
+
+[tool.ruff]
+line-length = 110
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
