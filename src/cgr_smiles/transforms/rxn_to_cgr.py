@@ -183,6 +183,7 @@ def rxnsmiles_to_cgrsmiles(
 
     replace_dict_atoms = {}
     replace_dict_bonds = {}
+
     for i1 in range(n_atoms):
         atom_reac = mol_reac.GetAtomWithIdx(i1)
         atom_cgr = mol_cgr.GetAtomWithIdx(i1)
@@ -207,6 +208,7 @@ def rxnsmiles_to_cgrsmiles(
             smarts_bond_reac = "~"
             if bond_reac is not None:
                 smarts_bond_reac = bond_reac.GetSmarts(allBondsExplicit=True)
+
                 reac_begin, reac_end = (
                     bond_reac.GetBeginAtom().GetAtomMapNum(),
                     bond_reac.GetEndAtom().GetAtomMapNum(),

@@ -61,8 +61,8 @@ def parse_bonds_from_smiles(smiles: str) -> dict[tuple[int, int], str]:
                 bond_val = next_bond_specifier if next_bond_specifier is not None else "-"
                 replace_dict_bonds[bond_map_num_pair] = bond_val
 
-            current_logical_idx += 1
             anchor_logical_idx = current_logical_idx
+            current_logical_idx += 1
             next_bond_specifier = None  # Clear any pending bond specifier
 
         elif tokentype == TokenType.BOND_TYPE or tokentype == TokenType.EZSTEREO:
@@ -193,8 +193,11 @@ def update_chirality_tags(smiles: str, cgr_scaffold: str, chiral_center_map_nums
                     elif current_tag == "@@":
                         chirality_tag = "@"
 
-                replace_pattern = rf"(\[[A-Z][a-z]?)(@{{1,2}})?(:{map_num}\])"
-                reac_tokens[i][1] = re.sub(replace_pattern, rf"\1{chirality_tag}\3", reac_tokens[i][1])
+                # replace_pattern = rf"(\[[A-Z][a-z]?)(@{{1,2}})?(:{map_num}\])"
+                replace_pattern = rf"(\[[A-Z][a-z]?)(@{{1,2}})?([+-]*:{map_num}\])"
+                old_tok = reac_tokens[i][1]
+                tok = re.sub(replace_pattern, rf"\1{chirality_tag}\3", old_tok)
+                reac_tokens[i][1] = tok
 
     return "".join([str(tok[1]) for tok in reac_tokens])
 
