@@ -14,6 +14,8 @@ repos:
       - id: check-yaml
       - id: check-toml
       - id: check-added-large-files
+        args: ["--maxkb=500"]
+        exclude: ^tests/data/
 
   # - repo: https://github.com/pre-commit/mirrors-mypy
   #   rev: v1.11.2   # use the latest mypy release
