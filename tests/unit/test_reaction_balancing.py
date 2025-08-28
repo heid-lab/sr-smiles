@@ -4,14 +4,14 @@ import pytest
 from rxnmapper import RXNMapper
 
 from cgr_smiles.reaction_balancing import balance_reaction
-from cgr_smiles.utils import get_list_of_atom_map_numbers
+from cgr_smiles.utils import ROOT_DIR, get_list_of_atom_map_numbers
 
 
 @pytest.fixture(scope="session")
 def load_unbalanced_reaction_cases():
     """Load and map 100 unbalanced reaction SMILES from USPTO-50k dataset."""
     n_samples = 100
-    csv_path = "/home/charlotte.gerhaher/projects/chemtorch/data/uspto_1k/test.csv"
+    csv_path = ROOT_DIR / "tests" / "data" / "uspto_1k" / "test.csv"
     cases = []
     with open(csv_path, newline="") as f:
         reader = csv.DictReader(f)
