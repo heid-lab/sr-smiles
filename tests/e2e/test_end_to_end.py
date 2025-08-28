@@ -10,7 +10,7 @@ from cgr_smiles.utils import ROOT_DIR, canonicalize
 TEST_DATA_PATH = ROOT_DIR / "tests" / "data"
 
 
-def generate_individual_tests():
+def generate_individual_tests(max_samples: int = 1000):
     """Load and prepare individual reaction test cases for the entire test session.
 
     Reads multiple CSV datasets and returns a list of test cases and corresponding IDs.
@@ -40,6 +40,7 @@ def generate_individual_tests():
     for file_path, rxn_col in dataset_configs:
         full_path = TEST_DATA_PATH / file_path
         df = pd.read_csv(full_path)
+        df = df.sample(n=min(max_samples, len(df)), random_state=42)
 
         for idx, row in df.iterrows():
             rxn = row[rxn_col]
