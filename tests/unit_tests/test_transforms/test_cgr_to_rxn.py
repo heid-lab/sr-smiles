@@ -43,6 +43,22 @@ def test_cgrsmiles_to_rxnsmiles(rxn_id, rxn_smiles, cgr_smiles):
     assert rxn2 == res2, f"Assertion error for reaction with id {rxn_id}"
 
 
+def test_cgr_to_rxn_invalid_smiles(propagated_logger, caplog):
+    """Verify that invalid CGR SMILES input logs a warning and returns an empty string."""
+    bad_smi = "INVALID-CGR-SMILES"
+
+    with caplog.at_level("WARNING", logger=propagated_logger.name):
+        result = cgrsmiles_to_rxnsmiles(bad_smi)
+
+    assert result == ""
+    assert len(caplog.records) == 1
+
+    record = caplog.records[0]
+    assert record.levelname == "WARNING"
+    assert f"Failed to process CGR-SMILES '{bad_smi}'" in record.message
+    assert "Returning empty string." in record.message
+
+
 def e_z_stereo_test_cases():
     """Provide E/Z stereochemistry test cases."""
     return [

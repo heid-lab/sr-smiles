@@ -3,6 +3,7 @@ from collections import defaultdict
 
 from rdkit import Chem
 
+from cgr_smiles.logger import logger
 from cgr_smiles.utils import (
     TokenType,
     _tokenize,
@@ -422,44 +423,49 @@ def cgrsmiles_to_rxnsmiles(cgr_smiles: str) -> str:
         - Stereochemistry and chirality tags are preserved and corrected during reconstruction.
         - This function is the reverse transformation of `rxnsmiles_to_cgrsmiles`.
     """
-    # TODO: start with a validity check, especially that each substitution pattern follows `{...|...}`.
+    try:
+        # TODO: start with a validity check, especially that each substitution pattern follows `{...|...}`.
 
-    # extract reac and prod smiles scaffold from cgr smiles
-    reac_smi1, prod_smi1 = get_reac_prod_scaffold_smiles_from_cgr(cgr_smiles)
+        # extract reac and prod smiles scaffold from cgr smiles
+        reac_smi1, prod_smi1 = get_reac_prod_scaffold_smiles_from_cgr(cgr_smiles)
 
-    cgr_reac_scaffold = reac_smi1.replace("~", "")
-    cgr_prod_scaffold = prod_smi1.replace("~", "")
+        cgr_reac_scaffold = reac_smi1.replace("~", "")
+        cgr_prod_scaffold = prod_smi1.replace("~", "")
 
-    # extract the bonds, parsed from the smiles
-    reac_parsed_bonds = parse_bonds_from_smiles(reac_smi1)
-    prod_parsed_bonds = parse_bonds_from_smiles(prod_smi1)
+        # extract the bonds, parsed from the smiles
+        reac_parsed_bonds = parse_bonds_from_smiles(reac_smi1)
+        prod_parsed_bonds = parse_bonds_from_smiles(prod_smi1)
 
-    # extract the bond information of the unspecified bonds (those we want to delete from the molecule)
-    reac_map_nums_unspecified_bonds = [key for key, val in reac_parsed_bonds.items() if val == "~"]
-    prod_map_nums_unspecified_bonds = [key for key, val in prod_parsed_bonds.items() if val == "~"]
+        # extract the bond information of the unspecified bonds (those we want to delete from the molecule)
+        reac_map_nums_unspecified_bonds = [key for key, val in reac_parsed_bonds.items() if val == "~"]
+        prod_map_nums_unspecified_bonds = [key for key, val in prod_parsed_bonds.items() if val == "~"]
 
-    # then create the molecules from the smiles and manually remove the bonds that are labelled as unspecified
-    reac_mol = Chem.MolFromSmiles(reac_smi1.replace("~", ""), sanitize=False)
-    prod_mol = Chem.MolFromSmiles(prod_smi1.replace("~", ""), sanitize=False)
-    Chem.SanitizeMol(prod_mol, Chem.SanitizeFlags.SANITIZE_ADJUSTHS)  # TODO also for reac
-    Chem.SanitizeMol(reac_mol, Chem.SanitizeFlags.SANITIZE_ADJUSTHS)  # TODO also for reac
-    reac_mol = remove_bonds_by_atom_map_nums(
-        reac_mol, reac_map_nums_unspecified_bonds
-    )  # smiles based patch needed while bug not fixed on rdkits end.
-    prod_mol = remove_bonds_by_atom_map_nums(prod_mol, prod_map_nums_unspecified_bonds)
+        # create the mols from the smiles and manually remove the bonds that are labelled as unspecified
+        reac_mol = Chem.MolFromSmiles(reac_smi1.replace("~", ""), sanitize=False)
+        prod_mol = Chem.MolFromSmiles(prod_smi1.replace("~", ""), sanitize=False)
+        Chem.SanitizeMol(prod_mol, Chem.SanitizeFlags.SANITIZE_ADJUSTHS)  # TODO also for reac
+        Chem.SanitizeMol(reac_mol, Chem.SanitizeFlags.SANITIZE_ADJUSTHS)  # TODO also for reac
+        reac_mol = remove_bonds_by_atom_map_nums(
+            reac_mol, reac_map_nums_unspecified_bonds
+        )  # smiles based patch needed while bug not fixed on rdkits end.
+        prod_mol = remove_bonds_by_atom_map_nums(prod_mol, prod_map_nums_unspecified_bonds)
 
-    # update stereochem bonds / and \ (because apparently they get messed up along the way. this might not be neccessary anymore if previous bug gets fixed.)  # noqa: E501
-    reac_mol = update_cis_trans_stereo_chem(reac_mol, reac_parsed_bonds)
-    prod_mol = update_cis_trans_stereo_chem(prod_mol, prod_parsed_bonds)
+        # update stereochem bonds / and \ (because apparently they get messed up along the way. this might not be neccessary anymore if previous bug gets fixed.)  # noqa: E501
+        reac_mol = update_cis_trans_stereo_chem(reac_mol, reac_parsed_bonds)
+        prod_mol = update_cis_trans_stereo_chem(prod_mol, prod_parsed_bonds)
 
-    # then get the resulting smiles again and check if the chirality tags are correct.
-    reac_smi3 = Chem.MolToSmiles(reac_mol, canonical=False)
-    prod_smi3 = Chem.MolToSmiles(prod_mol, canonical=False)
+        # then get the resulting smiles again and check if the chirality tags are correct.
+        reac_smi3 = Chem.MolToSmiles(reac_mol, canonical=False)
+        prod_smi3 = Chem.MolToSmiles(prod_mol, canonical=False)
 
-    reac_map_num_of_chiral_centers = get_chiral_center_map_nums(reac_mol)
-    prod_map_num_of_chiral_centers = get_chiral_center_map_nums(prod_mol)
+        reac_map_num_of_chiral_centers = get_chiral_center_map_nums(reac_mol)
+        prod_map_num_of_chiral_centers = get_chiral_center_map_nums(prod_mol)
 
-    reac_smi4 = update_chirality_tags(reac_smi3, cgr_reac_scaffold, reac_map_num_of_chiral_centers)
-    prod_smi4 = update_chirality_tags(prod_smi3, cgr_prod_scaffold, prod_map_num_of_chiral_centers)
+        reac_smi4 = update_chirality_tags(reac_smi3, cgr_reac_scaffold, reac_map_num_of_chiral_centers)
+        prod_smi4 = update_chirality_tags(prod_smi3, cgr_prod_scaffold, prod_map_num_of_chiral_centers)
 
-    return f"{reac_smi4}>>{prod_smi4}"
+        return f"{reac_smi4}>>{prod_smi4}"
+
+    except Exception as e:
+        logger.warning(f"Failed to process CGR-SMILES '{cgr_smiles}'. Error: {e}. Returning empty string.")
+        return ""

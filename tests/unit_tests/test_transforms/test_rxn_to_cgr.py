@@ -78,3 +78,18 @@ def test_rxnsmiles_to_cgrsmiles_e_z_stereo(idx, rxn_smiles, cgr_smiles):
     """Test E/Z stereo changes in RXN to CGR transformation."""
     result = rxnsmiles_to_cgrsmiles(rxn_smiles, keep_atom_mapping=True)
     assert result == cgr_smiles, f"Assertion error for reaction with id {idx}"
+
+
+def test_rxn_to_cgr_invalid_smiles(propagated_logger, caplog):
+    """Verify that invalid RXN SMILES input logs a warning and returns an empty string."""
+    bad_smi = "INVALID-RXN-SMILES"
+
+    with caplog.at_level("WARNING", logger=propagated_logger.name):
+        result = rxnsmiles_to_cgrsmiles(bad_smi)
+
+    assert result == ""
+    assert len(caplog.records) == 1
+    record = caplog.records[0]
+    assert record.levelname == "WARNING"
+    assert f"Failed to process RXN-SMILES '{bad_smi}'" in record.message
+    assert "Returning empty string." in record.message

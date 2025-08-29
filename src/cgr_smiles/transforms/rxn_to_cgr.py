@@ -2,6 +2,7 @@ import re
 
 from rdkit import Chem
 
+from cgr_smiles.logger import logger
 from cgr_smiles.utils import (
     ORGANIC_SUBSET,
     TokenType,
@@ -136,171 +137,176 @@ def rxnsmiles_to_cgrsmiles(
         # was no bond between these two hydrogen atoms in the reactants, a single bond has been
         # formed between them in the product molecule.
     """
-    # TODO: check if rxn_smiles is atom mapped, if not, add mapping.
-    # TODO: maybe let this function make the assumption of balanced, fully mapped reactions.
-    # Handling of the preparation, shall the wrapper do.
-    # fully_atom_mapped = is_fully_atom_mapped(rxn_smi)
-    # if not fully_atom_mapped:
-    #     print(f"WARNING: given reaction smiles is not fully atom mapped: {rxn_smi}")
-    #     rxn_smi = add_atom_mapping(rxn_smi)
+    try:
+        # TODO: check if rxn_smiles is atom mapped, if not, add mapping.
+        # TODO: maybe let this function make the assumption of balanced, fully mapped reactions.
+        # Handling of the preparation, shall the wrapper do.
+        # fully_atom_mapped = is_fully_atom_mapped(rxn_smi)
+        # if not fully_atom_mapped:
+        #     print(f"WARNING: given reaction smiles is not fully atom mapped: {rxn_smi}")
+        #     rxn_smi = add_atom_mapping(rxn_smi)
 
-    smi_reac, _, smi_prod = rxn_smi.split(">")
-    mol_reac, mol_prod = make_mol(smi_reac), make_mol(smi_prod)
+        smi_reac, _, smi_prod = rxn_smi.split(">")
+        mol_reac, mol_prod = make_mol(smi_reac), make_mol(smi_prod)
 
-    ri2pi = map_reac_to_prod(mol_reac, mol_prod)
+        ri2pi = map_reac_to_prod(mol_reac, mol_prod)
 
-    # add missing bonds to the cgr mol
-    mol_cgr = Chem.EditableMol(mol_reac)
-    n_atoms = mol_reac.GetNumAtoms()
-    unspecified_bonds = []
-    for idx1 in range(n_atoms):
-        for idx2 in range(idx1 + 1, n_atoms):
-            bond_reac = mol_reac.GetBondBetweenAtoms(idx1, idx2)
-            bond_prod = mol_prod.GetBondBetweenAtoms(ri2pi[idx1], ri2pi[idx2])
-            if bond_reac is None and bond_prod is not None:
-                mol_cgr.AddBond(idx1, idx2, order=Chem.rdchem.BondType.UNSPECIFIED)
-                unspecified_bonds.append((idx1, idx2))
+        # add missing bonds to the cgr mol
+        mol_cgr = Chem.EditableMol(mol_reac)
+        n_atoms = mol_reac.GetNumAtoms()
+        unspecified_bonds = []
+        for idx1 in range(n_atoms):
+            for idx2 in range(idx1 + 1, n_atoms):
+                bond_reac = mol_reac.GetBondBetweenAtoms(idx1, idx2)
+                bond_prod = mol_prod.GetBondBetweenAtoms(ri2pi[idx1], ri2pi[idx2])
+                if bond_reac is None and bond_prod is not None:
+                    mol_cgr.AddBond(idx1, idx2, order=Chem.rdchem.BondType.UNSPECIFIED)
+                    unspecified_bonds.append((idx1, idx2))
 
-    mol_cgr = mol_cgr.GetMol()
-    smi_cgr = Chem.MolToSmiles(mol_cgr, canonical=False)
-    mol_cgr = make_mol(smi_cgr, sanitize=False)
+        mol_cgr = mol_cgr.GetMol()
+        smi_cgr = Chem.MolToSmiles(mol_cgr, canonical=False)
+        mol_cgr = make_mol(smi_cgr, sanitize=False)
 
-    # reorder reac and prod molecule so we get the relative stereochemistry tags right:
-    # TODO: by doing the reordering, we basically canonicalize and make it a non-injective mapping
-    # TODO: maybe instead just align the mapping of the product with the one in the reactant
-    prod_map_to_id = dict([(atom.GetAtomMapNum(), atom.GetIdx()) for atom in mol_prod.GetAtoms()])
-    prod_reorder = [prod_map_to_id[a.GetAtomMapNum()] for a in mol_cgr.GetAtoms()]
-    mol_prod = Chem.RenumberAtoms(mol_prod, prod_reorder)
-    smi_prod = Chem.MolToSmiles(mol_prod, canonical=False)
+        # reorder reac and prod molecule so we get the relative stereochemistry tags right:
+        # TODO: by doing the reordering, we basically canonicalize and make it a non-injective mapping
+        # TODO: maybe instead just align the mapping of the product with the one in the reactant
+        prod_map_to_id = dict([(atom.GetAtomMapNum(), atom.GetIdx()) for atom in mol_prod.GetAtoms()])
+        prod_reorder = [prod_map_to_id[a.GetAtomMapNum()] for a in mol_cgr.GetAtoms()]
+        mol_prod = Chem.RenumberAtoms(mol_prod, prod_reorder)
+        smi_prod = Chem.MolToSmiles(mol_prod, canonical=False)
 
-    reac_map_to_id = dict([(atom.GetAtomMapNum(), atom.GetIdx()) for atom in mol_reac.GetAtoms()])
-    reac_reorder = [reac_map_to_id[a.GetAtomMapNum()] for a in mol_cgr.GetAtoms()]
-    mol_reac = Chem.RenumberAtoms(mol_reac, reac_reorder)
-    smi_reac = Chem.MolToSmiles(mol_reac, canonical=False)
+        reac_map_to_id = dict([(atom.GetAtomMapNum(), atom.GetIdx()) for atom in mol_reac.GetAtoms()])
+        reac_reorder = [reac_map_to_id[a.GetAtomMapNum()] for a in mol_cgr.GetAtoms()]
+        mol_reac = Chem.RenumberAtoms(mol_reac, reac_reorder)
+        smi_reac = Chem.MolToSmiles(mol_reac, canonical=False)
 
-    update_all_atom_stereo(mol_reac, smi_reac, smi_cgr)
-    update_all_atom_stereo(mol_prod, smi_prod, smi_cgr)
+        update_all_atom_stereo(mol_reac, smi_reac, smi_cgr)
+        update_all_atom_stereo(mol_prod, smi_prod, smi_cgr)
 
-    replace_dict_atoms = {}
-    replace_dict_bonds = {}
+        replace_dict_atoms = {}
+        replace_dict_bonds = {}
 
-    for i1 in range(n_atoms):
-        atom_reac = mol_reac.GetAtomWithIdx(i1)
-        atom_cgr = mol_cgr.GetAtomWithIdx(i1)
-        atom_prod = mol_prod.GetAtomWithIdx(i1)
+        for i1 in range(n_atoms):
+            atom_reac = mol_reac.GetAtomWithIdx(i1)
+            atom_cgr = mol_cgr.GetAtomWithIdx(i1)
+            atom_prod = mol_prod.GetAtomWithIdx(i1)
 
-        reac_smarts = atom_reac.GetSmarts(isomericSmiles=True)
-        prod_smarts = atom_prod.GetSmarts(isomericSmiles=True)
+            reac_smarts = atom_reac.GetSmarts(isomericSmiles=True)
+            prod_smarts = atom_prod.GetSmarts(isomericSmiles=True)
 
-        if reac_smarts != prod_smarts:
-            replace_dict_atoms[atom_cgr.GetAtomMapNum()] = f"{{{reac_smarts}|{prod_smarts}}}"
-        else:
-            replace_dict_atoms[atom_cgr.GetAtomMapNum()] = reac_smarts
-
-        for i2 in range(i1 + 1, n_atoms):
-            atom2_cgr = mol_cgr.GetAtomWithIdx(i2)
-            map_num_1 = atom_cgr.GetAtomMapNum()
-            map_num_2 = atom2_cgr.GetAtomMapNum()
-            bond_reac = mol_reac.GetBondBetweenAtoms(i1, i2)
-            bond_prod = mol_prod.GetBondBetweenAtoms(i1, i2)
-
-            reac_begin, reac_end = map_num_1, map_num_2
-            smarts_bond_reac = "~"
-            if bond_reac is not None:
-                smarts_bond_reac = bond_reac.GetSmarts(allBondsExplicit=True)
-
-                reac_begin, reac_end = (
-                    bond_reac.GetBeginAtom().GetAtomMapNum(),
-                    bond_reac.GetEndAtom().GetAtomMapNum(),
-                )
-
-            prod_begin, prod_end = map_num_1, map_num_2
-            smarts_bond_prod = "~"
-            if bond_prod is not None:
-                smarts_bond_prod = bond_prod.GetSmarts(allBondsExplicit=True)
-                prod_begin, prod_end = (
-                    bond_prod.GetBeginAtom().GetAtomMapNum(),
-                    bond_prod.GetEndAtom().GetAtomMapNum(),
-                )
-
-                if (
-                    reac_begin == prod_end and reac_end == prod_begin
-                ):  # TODO: maybe actually compare to cgr begin end atom, not reac vs. prod.
-                    # need to flip!
-                    smarts_bond_prod = flip_e_z_stereo(smarts_bond_prod)
-
-            if bond_reac is None and bond_prod is None:
-                continue
-
-            if smarts_bond_reac != smarts_bond_prod:
-                val = f"{{{smarts_bond_reac}|{smarts_bond_prod}}}"
+            if reac_smarts != prod_smarts:
+                replace_dict_atoms[atom_cgr.GetAtomMapNum()] = f"{{{reac_smarts}|{prod_smarts}}}"
             else:
-                val = smarts_bond_reac if smarts_bond_reac != "-" else ""
+                replace_dict_atoms[atom_cgr.GetAtomMapNum()] = reac_smarts
 
-            replace_dict_bonds[(reac_begin, reac_end)] = val
-            replace_dict_bonds[(reac_end, reac_begin)] = flip_e_z_stereo(val)
+            for i2 in range(i1 + 1, n_atoms):
+                atom2_cgr = mol_cgr.GetAtomWithIdx(i2)
+                map_num_1 = atom_cgr.GetAtomMapNum()
+                map_num_2 = atom2_cgr.GetAtomMapNum()
+                bond_reac = mol_reac.GetBondBetweenAtoms(i1, i2)
+                bond_prod = mol_prod.GetBondBetweenAtoms(i1, i2)
 
-    # change bonds
-    smiles = ""
-    anchor = None
-    idx = 0
-    next_bond = None
-    branches = []
-    ring_nums = {}
-    i2m = {}
-    for tokentype, token_idx, token in _tokenize(smi_cgr):
-        if tokentype == TokenType.ATOM:
-            i2m[idx] = int(token[:-1].split(":")[1])
-            if anchor is not None:
-                if next_bond is None:
-                    next_bond = ""
-                smiles += replace_dict_bonds.get((i2m[anchor], i2m[idx]), next_bond)
-                next_bond = None
-            smiles += token
-            anchor = idx
-            idx += 1
-        elif tokentype == TokenType.BRANCH_START:
-            branches.append(anchor)
-            smiles += token
-        elif tokentype == TokenType.BRANCH_END:
-            anchor = branches.pop()
-            smiles += token
-        elif tokentype == TokenType.BOND_TYPE:
-            next_bond = token
-        elif tokentype == TokenType.EZSTEREO:
-            next_bond = token
-        elif tokentype == TokenType.RING_NUM:
-            if token in ring_nums:
-                jdx, order = ring_nums[token]
-                if next_bond is None and order is None:
-                    next_bond = ""
-                elif order is None:
-                    next_bond = next_bond
-                elif next_bond is None:
-                    next_bond = order
-                smiles += replace_dict_bonds.get((i2m[idx - 1], i2m[jdx]), next_bond)
-                smiles += str(token)
-                next_bond = None
-                del ring_nums[token]
+                reac_begin, reac_end = map_num_1, map_num_2
+                smarts_bond_reac = "~"
+                if bond_reac is not None:
+                    smarts_bond_reac = bond_reac.GetSmarts(allBondsExplicit=True)
 
-            else:
-                ring_nums[token] = (idx - 1, next_bond)
-                next_bond = None
-                smiles += str(token)
+                    reac_begin, reac_end = (
+                        bond_reac.GetBeginAtom().GetAtomMapNum(),
+                        bond_reac.GetEndAtom().GetAtomMapNum(),
+                    )
 
-    smi_cgr = smiles
+                prod_begin, prod_end = map_num_1, map_num_2
+                smarts_bond_prod = "~"
+                if bond_prod is not None:
+                    smarts_bond_prod = bond_prod.GetSmarts(allBondsExplicit=True)
+                    prod_begin, prod_end = (
+                        bond_prod.GetBeginAtom().GetAtomMapNum(),
+                        bond_prod.GetEndAtom().GetAtomMapNum(),
+                    )
 
-    # change atoms
-    for k in replace_dict_atoms.keys():
-        smi_cgr = smi_cgr.replace(re.findall(rf"\[[^):]*:{k}\]", smi_cgr)[0], replace_dict_atoms[k])
+                    if (
+                        reac_begin == prod_end and reac_end == prod_begin
+                    ):  # TODO: maybe actually compare to cgr begin end atom, not reac vs. prod.
+                        # need to flip!
+                        smarts_bond_prod = flip_e_z_stereo(smarts_bond_prod)
 
-    if not keep_atom_mapping:
-        smi_cgr = remove_atom_mapping(smi_cgr)
+                if bond_reac is None and bond_prod is None:
+                    continue
 
-    if remove_brackets and remove_hydrogens:
-        smi_cgr = remove_redundant_brackets_and_hydrogens(smi_cgr)
+                if smarts_bond_reac != smarts_bond_prod:
+                    val = f"{{{smarts_bond_reac}|{smarts_bond_prod}}}"
+                else:
+                    val = smarts_bond_reac if smarts_bond_reac != "-" else ""
 
-    elif remove_brackets:
-        smi_cgr = remove_redundant_brackets(smi_cgr)
+                replace_dict_bonds[(reac_begin, reac_end)] = val
+                replace_dict_bonds[(reac_end, reac_begin)] = flip_e_z_stereo(val)
 
-    return smi_cgr
+        # change bonds
+        smiles = ""
+        anchor = None
+        idx = 0
+        next_bond = None
+        branches = []
+        ring_nums = {}
+        i2m = {}
+        for tokentype, token_idx, token in _tokenize(smi_cgr):
+            if tokentype == TokenType.ATOM:
+                i2m[idx] = int(token[:-1].split(":")[1])
+                if anchor is not None:
+                    if next_bond is None:
+                        next_bond = ""
+                    smiles += replace_dict_bonds.get((i2m[anchor], i2m[idx]), next_bond)
+                    next_bond = None
+                smiles += token
+                anchor = idx
+                idx += 1
+            elif tokentype == TokenType.BRANCH_START:
+                branches.append(anchor)
+                smiles += token
+            elif tokentype == TokenType.BRANCH_END:
+                anchor = branches.pop()
+                smiles += token
+            elif tokentype == TokenType.BOND_TYPE:
+                next_bond = token
+            elif tokentype == TokenType.EZSTEREO:
+                next_bond = token
+            elif tokentype == TokenType.RING_NUM:
+                if token in ring_nums:
+                    jdx, order = ring_nums[token]
+                    if next_bond is None and order is None:
+                        next_bond = ""
+                    elif order is None:
+                        next_bond = next_bond
+                    elif next_bond is None:
+                        next_bond = order
+                    smiles += replace_dict_bonds.get((i2m[idx - 1], i2m[jdx]), next_bond)
+                    smiles += str(token)
+                    next_bond = None
+                    del ring_nums[token]
+
+                else:
+                    ring_nums[token] = (idx - 1, next_bond)
+                    next_bond = None
+                    smiles += str(token)
+
+        smi_cgr = smiles
+
+        # change atoms
+        for k in replace_dict_atoms.keys():
+            smi_cgr = smi_cgr.replace(re.findall(rf"\[[^):]*:{k}\]", smi_cgr)[0], replace_dict_atoms[k])
+
+        if not keep_atom_mapping:
+            smi_cgr = remove_atom_mapping(smi_cgr)
+
+        if remove_brackets and remove_hydrogens:
+            smi_cgr = remove_redundant_brackets_and_hydrogens(smi_cgr)
+
+        elif remove_brackets:
+            smi_cgr = remove_redundant_brackets(smi_cgr)
+
+        return smi_cgr
+
+    except Exception as e:
+        logger.warning(f"Failed to process RXN-SMILES '{rxn_smi}'. Error: {e}. Returning empty string.")
+        return ""
