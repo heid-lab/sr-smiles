@@ -3,6 +3,7 @@ from typing import Literal
 from rdkit import Chem
 from rdkit.Chem import rdFMCS
 
+from cgr_smiles.logger import logger
 from cgr_smiles.utils import (
     get_atom_map_num_of_mol,
     make_mol,
@@ -71,8 +72,8 @@ def add_atom_mapping(
     # TODO: maybe even do a hybrid approach, where we do rxn_mapper, but if the confidence is low, we do a rule-based mapping.  # noqa: E501
 
     if method == "rxnmapper":
-        print(
-            "WARNING: Calling the RXNmapper for a single reaction SMILES is very inefficient. "
+        logger.warning(
+            "Calling the RXNmapper for a single reaction SMILES is very inefficient. "
             "For multiple reactions, use the wrapper class instead (TODO), "
             "which runs the mapper more efficiently in batch."
         )

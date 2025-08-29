@@ -2,8 +2,8 @@ name: CI
 
 on:
   push:
-    branches: [ main ]        # run on pushes to main
-  pull_request:               # run on all PRs into main
+    branches: [ main ]
+  pull_request:
     branches: [ main ]
 
 jobs:
@@ -18,7 +18,7 @@ jobs:
           python-version: "3.10"
 
       - name: Install Poetry
-        run: pip install poetry
+        run: pip install "poetry>=1.8.0"
 
       - name: Install dependencies
         run: poetry install --with dev --extras "rxnmapper"
@@ -28,14 +28,18 @@ jobs:
     needs: setup
     steps:
       - uses: actions/checkout@v4
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.10"
+
       - name: Install Poetry
-        run: pip install poetry
+        run: pip install "poetry>=1.8.0"
+
       - name: Install dependencies
         run: poetry install --with dev
+
       - name: Run pre-commit
         run: poetry run pre-commit run --all-files --show-diff-on-failure
 
@@ -44,7 +48,25 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.10", "3.11", "3.12"]
+        include:
+          - python-version: "3.12"
+            rdkit-version: "2025.03.5"
+          - python-version: "3.12"
+            rdkit-version: "2024.09.5"
+
+          - python-version: "3.11"
+            rdkit-version: "2025.03.5"
+          - python-version: "3.11"
+            rdkit-version: "2024.03.5"
+          - python-version: "3.11"
+            rdkit-version: "2023.09.5"
+
+          - python-version: "3.10"
+            rdkit-version: "2025.03.5"
+
+          - python-version: "3.9"
+            rdkit-version: "2025.03.5"
+
     needs: setup
     steps:
       - uses: actions/checkout@v4
@@ -52,13 +74,16 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.10"
+          python-version: ${{ matrix.python-version }}
 
       - name: Install Poetry
-        run: pip install poetry
+        run: pip install "poetry>=1.8.0"
+
+      - name: Install RDKit
+        run: conda install -c conda-forge python=${{ matrix.python-version }} rdkit=${{ matrix.rdkit-version }} -y
 
       - name: Install dependencies
         run: poetry install --with dev --extras "rxnmapper"
 
       - name: Run pytest
-        run: poetry run pytest tests
+        run: poetry run pytest --cov=src/cgr_smiles --cov-report=term-missing

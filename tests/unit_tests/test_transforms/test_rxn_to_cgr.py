@@ -1,13 +1,16 @@
 import pandas as pd
 import pytest
 
-from cgr_smiles.transforms.rxn_to_cgr import rxnsmiles_to_cgrsmiles
+from cgr_smiles.transforms.rxn_to_cgr import (
+    remove_redundant_brackets,
+    remove_redundant_brackets_and_hydrogens,
+    rxnsmiles_to_cgrsmiles,
+)
 from cgr_smiles.utils import ROOT_DIR
 
 TEST_DATA_PATH = ROOT_DIR / "tests" / "data" / "cgr_test_cases.csv"
 
 
-# Load the test cases once
 def cgr_test_cases():
     """Loads test cases from a CSV file once per test module."""
     df = pd.read_csv(TEST_DATA_PATH)
@@ -93,3 +96,37 @@ def test_rxn_to_cgr_invalid_smiles(propagated_logger, caplog):
     assert record.levelname == "WARNING"
     assert f"Failed to process RXN-SMILES '{bad_smi}'" in record.message
     assert "Returning empty string." in record.message
+
+
+@pytest.mark.parametrize(
+    "cgr, expected",
+    [
+        ("[C]", "C"),
+        ("[CH3]", "C"),
+        ("[Fe]", "[Fe]"),
+        ("[CH3][O]{[CH3]|[NH2]}", "CO{C|N}"),
+        ("[CH3][O]{[CH3]|[NH3+]}", "CO{C|[NH3+]}"),
+        ("{[CH3]|[CH2]}", "C"),
+    ],
+)
+def test_remove_redundant_brackets_and_hydrogens(cgr, expected):
+    """Test removal of redundant brackets and explicit hydrogens."""
+    assert remove_redundant_brackets_and_hydrogens(cgr) == expected
+
+
+@pytest.mark.parametrize(
+    "cgr, expected",
+    [
+        ("[C]", "C"),
+        ("[N]", "N"),
+        ("[O]", "O"),
+        ("[Fe]", "[Fe]"),
+        ("[C+]", "[C+]"),
+        ("[CH3]", "[CH3]"),
+        ("[C][Fe][O]", "C[Fe]O"),
+        ("[C]{[Fe]|[O]}", "C{[Fe]|O}"),
+    ],
+)
+def test_remove_redundant_brackets(cgr, expected):
+    """Test removal of redundant brackets."""
+    assert remove_redundant_brackets(cgr) == expected

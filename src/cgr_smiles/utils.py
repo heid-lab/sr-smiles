@@ -1,7 +1,7 @@
 import enum
 import re
 from pathlib import Path
-from typing import Iterator, Optional
+from typing import Dict, Iterator, List, Optional, Tuple, Union
 
 import rdkit
 from rdkit import Chem
@@ -44,7 +44,7 @@ class TokenType(enum.Enum):
     OTHER = 8
 
 
-def _tokenize(smiles: str) -> Iterator[tuple[TokenType, int, str | int]]:
+def _tokenize(smiles: str) -> Iterator[Tuple[TokenType, int, Union[str, int]]]:
     """Tokenize a SMILES string into atoms, bonds, branches, and stereochemistry.
 
     Recognizes standard organic atoms, bond types, ring numbers, branching,
@@ -54,7 +54,7 @@ def _tokenize(smiles: str) -> Iterator[tuple[TokenType, int, str | int]]:
         smiles (str): The SMILES string to tokenize.
 
     Yields:
-        Iterator[tuple[TokenType, int, str | int]]: Tuples of
+        Iterator[Tuple[TokenType, int, Union[str, int]]]: Tuples of
             (token_type, original_index_in_string, token_value).
     """
     s_iter = iter(smiles)
@@ -158,7 +158,7 @@ def remove_redundant_square_brackets(rxn_smiles: str) -> str:
     return re.sub(pattern, replacer, rxn_smiles)
 
 
-def parse_bonds_in_order_from_smiles(smiles: str) -> dict[tuple[int, int], str]:
+def parse_bonds_in_order_from_smiles(smiles: str) -> Dict[Tuple[int, int], str]:
     """Parses SMILES to map bond atom-map pairs to their bond specifiers.
 
     This function traverses the SMILES token by token, identifying bonds by
@@ -168,8 +168,8 @@ def parse_bonds_in_order_from_smiles(smiles: str) -> dict[tuple[int, int], str]:
         smiles (str): SMILES string of a molecule.
 
     Returns:
-        dict[tuple[int, int], str]: A dict mapping sorted `(atom_map_num_1, atom_map_num_2)`
-            tuples to their bond specifier string.
+        Dict[Tuple[int, int], str]: A dict mapping sorted `(atom_map_num_1, atom_map_num_2)`
+            Tuples to their bond specifier string.
 
     Raises:
         ValueError: If the CGR SMILES string has malformed syntax.
@@ -263,7 +263,7 @@ def parse_bonds_in_order_from_smiles(smiles: str) -> dict[tuple[int, int], str]:
     return replace_dict_bonds
 
 
-def get_atom_map_adjacency_list_from_smiles(smi: str) -> dict[int, list[int]]:
+def get_atom_map_adjacency_list_from_smiles(smi: str) -> Dict[int, List[int]]:
     """Creates a dictionary, mapping each atom map number to a list of adjacent map numbers.
 
     The list of adjacent atom map numbers reflects the order in which bonds are encountered
@@ -273,7 +273,7 @@ def get_atom_map_adjacency_list_from_smiles(smi: str) -> dict[int, list[int]]:
         smi (str): A SMILES string with atom mapping.
 
     Returns:
-        dict[int, list[int]]: A dictionary where keys are atom map numbers and values are
+        Dict[int, List[int]]: A dictionary where keys are atom map numbers and values are
             lists of adjacent atom map numbers, representing the molecular graph connectivity.
     """
     bonds = parse_bonds_in_order_from_smiles(smi)
@@ -412,7 +412,7 @@ def is_num_permutations_even(l1: list, l2: list) -> bool:
     return num_swaps % 2 == 0
 
 
-def common_elements_preserving_order(list1: list, list2: list) -> tuple[list, list]:
+def common_elements_preserving_order(list1: list, list2: list) -> Tuple[list, list]:
     """Returns the common elements between two lists, preserving the order of each original list.
 
     Args:
@@ -420,7 +420,7 @@ def common_elements_preserving_order(list1: list, list2: list) -> tuple[list, li
         list2 (list): The second list of elements.
 
     Returns:
-        tuple[list, list]: Two lists containing only the common elements from `list1` and `list2`,
+        Tuple[list, list]: Two lists containing only the common elements from `list1` and `list2`,
         respectively, with their original order maintained.
     """
     set2 = set(list2)
@@ -525,7 +525,7 @@ def canonicalize(rxn_smi: str) -> Chem.Mol:
     return f"{smi_reac_new}>>{smi_prod_new}"
 
 
-def map_reac_to_prod(mol_reac: Chem.Mol, mol_prod: Chem.Mol) -> dict[int, int]:
+def map_reac_to_prod(mol_reac: Chem.Mol, mol_prod: Chem.Mol) -> Dict[int, int]:
     """Creates mapping from reactant atom indices to product atom indices based on atom mapping numbers.
 
     Args:
@@ -533,7 +533,7 @@ def map_reac_to_prod(mol_reac: Chem.Mol, mol_prod: Chem.Mol) -> dict[int, int]:
         mol_prod (Chem.Mol): RDKit molecule object for the products, with atom mapping numbers.
 
     Returns:
-        dict[int, int]: A dictionary mapping reactant atom indices (keys) to corresponding product atom
+        Dict[int, int]: A dictionary mapping reactant atom indices (keys) to corresponding product atom
             indices (values).
     """
     prod_map_to_id = {atom.GetAtomMapNum(): atom.GetIdx() for atom in mol_prod.GetAtoms()}
@@ -560,14 +560,14 @@ def get_atom_map_num(mol: Chem.Mol, atom_idx: int) -> int:
     return atom.GetAtomMapNum()
 
 
-def get_atom_map_num_of_mol(mol: Chem.Mol) -> list[int]:
+def get_atom_map_num_of_mol(mol: Chem.Mol) -> List[int]:
     """Retrieves the atom map numbers of all atoms in an RDKit molecule.
 
     Args:
         mol (Chem.Mol): The RDKit molecule.
 
     Returns:
-        list[int]: The list of atom map numbers of the molecule.
+        List[int]: The list of atom map numbers of the molecule.
     """
     map_nums = [a.GetAtomMapNum() for a in mol.GetAtoms()]
     return map_nums
@@ -590,14 +590,14 @@ def get_atom_by_map_num(mol: Chem.Mol, atom_map_num: int) -> Optional[Chem.Atom]
     return None
 
 
-def get_list_of_atom_map_numbers(smi: str) -> list[str]:
+def get_list_of_atom_map_numbers(smi: str) -> List[str]:
     """Extract all atom map numbers from a SMILES string in traversal order.
 
     Args:
         smi (str): A SMILES string potentially containing atom map numbers.
 
     Returns:
-        list[int]: A list of atom map numbers as integers, extracted from left to right.
+        List[int]: A list of atom map numbers as integers, extracted from left to right.
     """
     pattern = r":(\d+)"
     matches = re.findall(pattern, smi)
@@ -605,14 +605,14 @@ def get_list_of_atom_map_numbers(smi: str) -> list[str]:
     return ams
 
 
-def get_atom_indices_and_smarts(mol: Chem.Mol) -> list[tuple[int, str]]:
+def get_atom_indices_and_smarts(mol: Chem.Mol) -> List[Tuple[int, str]]:
     """Extract each atom's index and its corresponding SMARTS representation from the molecule.
 
     Args:
         mol (Chem.Mol): The molecule to process.
 
     Returns:
-        list[tuple[int, str]]: A list of tuples where each contains an atom's index and its SMARTS string.
+        List[Tuple[int, str]]: A list of tuples where each contains an atom's index and its SMARTS string.
     """
     num_atoms = mol.GetNumAtoms()
     atom_indices = [
@@ -622,7 +622,7 @@ def get_atom_indices_and_smarts(mol: Chem.Mol) -> list[tuple[int, str]]:
     return atom_indices
 
 
-def get_bond_idx(mol: Chem.Mol, atom_idx1: int, atom_idx2: int) -> int | None:
+def get_bond_idx(mol: Chem.Mol, atom_idx1: int, atom_idx2: int) -> Optional[int]:
     """Get the bond index between two atoms in a molecule.
 
     Args:
@@ -631,7 +631,7 @@ def get_bond_idx(mol: Chem.Mol, atom_idx1: int, atom_idx2: int) -> int | None:
         atom_idx2 (int): Index of the second atom.
 
     Returns:
-        int | None: The bond index if a bond exists between the two atoms; otherwise None.
+        Optional[int]: The bond index if a bond exists between the two atoms; otherwise None.
     """
     bond = mol.GetBondBetweenAtoms(atom_idx1, atom_idx2)
     return bond.GetIdx() if bond is not None else None

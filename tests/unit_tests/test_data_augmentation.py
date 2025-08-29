@@ -1,5 +1,6 @@
 import random
 from collections import Counter
+from typing import List
 
 import pytest
 from rdkit import Chem
@@ -66,7 +67,7 @@ def test_augment_atom_traversal_order_deterministic(rxn_smiles):
     ), "Augmentations with the same RNG seed should produce identical sequences, but differences were found."
 
 
-def get_atom_map_nums(smi: str) -> list[int]:
+def get_atom_map_nums(smi: str) -> List[int]:
     """Return the list of atom map numbers from a SMILES string."""
     mol = make_mol(smi)
     return [a.GetAtomMapNum() for a in mol.GetAtoms()]

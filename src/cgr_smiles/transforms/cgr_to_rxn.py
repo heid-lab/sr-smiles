@@ -1,5 +1,6 @@
 import re
 from collections import defaultdict
+from typing import Dict, List, Tuple
 
 from rdkit import Chem
 
@@ -15,7 +16,7 @@ from cgr_smiles.utils import (
 )
 
 
-def parse_bonds_from_smiles(smiles: str) -> dict[tuple[int, int], str]:
+def parse_bonds_from_smiles(smiles: str) -> Dict[Tuple[int, int], str]:
     """Parses SMILES to map bond atom-map pairs to their bond specifiers.
 
     This function traverses the SMILES token by token, identifying bonds by
@@ -25,7 +26,7 @@ def parse_bonds_from_smiles(smiles: str) -> dict[tuple[int, int], str]:
         smiles (str): SMILES string of a molecule.
 
     Returns:
-        dict[tuple[int, int], str]: A dictionary mapping sorted `(atom_map_num_1, atom_map_num_2)`
+        Dict[Tuple[int, int], str]: A dictionary mapping sorted `(atom_map_num_1, atom_map_num_2)`
             tuples to their bond specifier string.
 
     Raises:
@@ -115,12 +116,12 @@ def parse_bonds_from_smiles(smiles: str) -> dict[tuple[int, int], str]:
     return replace_dict_bonds
 
 
-def remove_bonds_by_atom_map_nums(mol: Chem.Mol, atom_map_pairs: list[tuple[int, int]]) -> Chem.Mol:
+def remove_bonds_by_atom_map_nums(mol: Chem.Mol, atom_map_pairs: List[Tuple[int, int]]) -> Chem.Mol:
     """Removes specified bonds from an RDKit molecule based on atom map number pairs.
 
     Args:
         mol (Chem.Mol): The input RDKit molecule object.
-        atom_map_pairs (list[tuple[int, int]]): A list of atom map tuples to be removed.
+        atom_map_pairs (List[Tuple[int, int]]): A list of atom map tuples to be removed.
 
     Returns:
         Chem.Mol: A new RDKit molecule object with the specified bonds removed.
@@ -152,7 +153,7 @@ def remove_bonds_by_atom_map_nums(mol: Chem.Mol, atom_map_pairs: list[tuple[int,
     return final_mol
 
 
-def update_chirality_tags(smiles: str, cgr_scaffold: str, chiral_center_map_nums: list[int]) -> str:
+def update_chirality_tags(smiles: str, cgr_scaffold: str, chiral_center_map_nums: List[int]) -> str:
     """Updates chirality tags in a SMILES string based on a CGR scaffold.
 
     Identifies chiral centers in the provided RDKit molecule (`mol`) by their atom
@@ -163,7 +164,7 @@ def update_chirality_tags(smiles: str, cgr_scaffold: str, chiral_center_map_nums
 
     Args:
         smiles (str): The input SMILES string of the molecule.
-        cgr_scaffold (list[int]): A reference CGR SMILES string containing correct chirality
+        cgr_scaffold (List[int]): A reference CGR SMILES string containing correct chirality
             information for comparison.
         chiral_center_map_nums: List of the atom map numbers of the chiral centers.
 
@@ -204,8 +205,8 @@ def update_chirality_tags(smiles: str, cgr_scaffold: str, chiral_center_map_nums
 
 
 def find_cis_trans_stereo_bonds(
-    bond_dict: dict[tuple[int, int], str],
-) -> dict[tuple[int, int], dict[str, any]]:
+    bond_dict: Dict[Tuple[int, int], str],
+) -> Dict[Tuple[int, int], Dict[str, any]]:
     r"""Identifies cis/trans stereochemistry of double bonds from bond data.
 
     Parses a dictionary representing molecule bonds and their types. It identifies
@@ -214,11 +215,11 @@ def find_cis_trans_stereo_bonds(
     double bond atoms.
 
     Args:
-        bond_dict (dict[tuple[int, int], str]): A dictionary where keys are tuples of atom indices,
+        bond_dict (Dict[Tuple[int, int], str]): A dictionary where keys are tuples of atom indices,
             and values are strings indicating the bond type.
 
     Returns:
-        dict[tuple[int, int], dict[str, any]: A dictionary where keys are tuples of atom indices
+        Dict[Tuple[int, int], Dict[str, any]: A dictionary where keys are tuples of atom indices
             `(idx_a, idx_b)` representing the double bond, and values are dictionaries containing:
                 - "stereo": An RDKit `Chem.BondStereo` enum value (STEREOCIS or STEREOTRANS).
                 - "terminal_atoms": A tuple of the two atom indices `(neighbor_a_idx, neighbor_b_idx)`
@@ -305,7 +306,7 @@ def update_cis_trans_stereo_chem(mol: Chem.Mol, parsed_bonds: dict) -> Chem.Mol:
         mol (Chem.Mol): An RDKit molecule object with atom map numbers.
         parsed_bonds (dict): A dictionary where keys are bond identifiers (tuple of atom map numbers),
             and values are dictionaries containing:
-                - 'terminal_atoms' (tuple[int, int]): The atom map numbers of the bond ends.
+                - 'terminal_atoms' (Tuple[int, int]): The atom map numbers of the bond ends.
                 - 'stereo' (Chem.rdchem.BondStereo): The desired stereochemistry for the bond.
 
     Returns:
@@ -346,7 +347,7 @@ def update_cis_trans_stereo_chem(mol: Chem.Mol, parsed_bonds: dict) -> Chem.Mol:
     return m
 
 
-def get_reac_prod_scaffold_smiles_from_cgr(cgr_smiles: str) -> tuple[str, str]:
+def get_reac_prod_scaffold_smiles_from_cgr(cgr_smiles: str) -> Tuple[str, str]:
     """Extracts the reactant and product scaffold SMILES from a CGR SMILES string.
 
     The CGR SMILES encodes atom-level differences between reactants and products using
@@ -358,7 +359,7 @@ def get_reac_prod_scaffold_smiles_from_cgr(cgr_smiles: str) -> tuple[str, str]:
         cgr_smiles (str): A CGR SMILES string containing substitution patterns.
 
     Returns:
-        tuple[str, str]: A tuple containing the reactant SMILES and product SMILES
+        Tuple[str, str]: A tuple containing the reactant SMILES and product SMILES
             with all substitution patterns resolved.
     """
     reac_smi = cgr_smiles
@@ -382,14 +383,14 @@ def get_reac_prod_scaffold_smiles_from_cgr(cgr_smiles: str) -> tuple[str, str]:
     return reac_smi, prod_smi
 
 
-def get_chiral_center_map_nums(mol: Chem.Mol) -> list[int]:
+def get_chiral_center_map_nums(mol: Chem.Mol) -> List[int]:
     """Returns the atom map numbers of chiral centers in an RDKit molecule.
 
     Args:
         mol (Chem.Mol): The input RDKit molecule object.
 
     Returns:
-        list[int]: A list of integer atom map numbers corresponding to the chiral centers
+        List[int]: A list of integer atom map numbers corresponding to the chiral centers
             found in the molecule.
     """
     atom_map_nums = []

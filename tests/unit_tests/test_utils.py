@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import List, Tuple
 
 import pytest
 from rdkit import Chem
@@ -14,6 +14,7 @@ from cgr_smiles.utils import (
     get_atom_map_num,
     get_bond_idx,
     get_list_of_atom_map_numbers,
+    includes_individually_mapped_hydrogens,
     is_num_permutations_even,
     map_reac_to_prod,
     parse_bonds_in_order_from_smiles,
@@ -32,7 +33,7 @@ def simple_mol() -> Chem.Mol:
 
 
 @pytest.fixture
-def reaction_mols() -> tuple[Chem.Mol, Chem.Mol]:
+def reaction_mols() -> Tuple[Chem.Mol, Chem.Mol]:
     """Provides a simple reactant and product molecule pair."""
     reac_smi = "[CH3:1][C:2](=[O:3])[O:4].[CH3:5][NH2:6]"
     prod_smi = "[CH3:1][C:2](=[O:3])[NH:6][CH3:5].[OH2:4]"
@@ -48,7 +49,7 @@ def simple_smiles() -> str:
 
 
 @pytest.fixture
-def complex_smiles() -> tuple[Chem.Mol, Chem.Mol]:
+def complex_smiles() -> Tuple[Chem.Mol, Chem.Mol]:
     """Provides a complex smiles, including multiple rings and stereochemistry."""
     smiles = "[C:1]([C@@:2]1([H:11])[O:3][C@@:4]2([H:12])[C:5]([H:13])([H:14])[C:6]([H:15])([H:16])[C@@:7]12[H:17])([H:8])([H:9])[H:10]"  # noqa: E501
     return smiles
@@ -299,7 +300,7 @@ test_data = [
 
 
 @pytest.mark.parametrize("test_name, smiles, expected_tokens", test_data)
-def test_tokenize_valid_smiles(test_name: str, smiles: str, expected_tokens: list[Tuple[TokenType, str]]):
+def test_tokenize_valid_smiles(test_name: str, smiles: str, expected_tokens: List[Tuple[TokenType, str]]):
     """Tests the `_tokenize()` function with various valid SMILES strings."""
     actual_tokens = [(t[0], t[2]) for t in _tokenize(smiles)]
     assert (
@@ -353,6 +354,18 @@ def test_update_all_atom_stereo_with_chirality_change(simple_mol):
 
     chiral_tag_after = chiral_atom.GetChiralTag()
     assert chiral_tag_before != chiral_tag_after
+
+
+@pytest.mark.parametrize(
+    "smiles, expected",
+    [
+        ("[O:1]([H:2])[H:3]", True),
+        ("[CH3:1]=[O:2]", False),
+    ],
+)
+def test_includes_individually_mapped_hydrogens(smiles, expected):
+    """Test detection of individually mapped hydrogens in SMILES."""
+    assert includes_individually_mapped_hydrogens(smiles) == expected
 
 
 @pytest.mark.parametrize(

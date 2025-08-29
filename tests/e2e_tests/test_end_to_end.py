@@ -21,7 +21,7 @@ def generate_individual_tests(max_samples: int = 1000):
         - rxn_col (str): Column name containing the reaction SMILES.
 
     Returns:
-        tuple[list[tuple[str, int, str, str]], list[str]]:
+        Tuple[List[Tuple[str, int, str, str]], List[str]]:
             A tuple containing the list of test cases and a list of test IDs.
     """
     test_cases = []

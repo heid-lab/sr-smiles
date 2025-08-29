@@ -1,15 +1,15 @@
 [project]
 name = "cgr-smiles"
 version = "0.1.0"
-description = ""
+description = "A Python library to convert reaction SMILES into CGR-SMILES."
 authors = [
-    {name = "Charlotte Gerhaher",email = "charlotte.gerhaher@tuwien.ac.at"}
+    {name = "Charlotte Gerhaher", email = "charlotte.gerhaher@tuwien.ac.at"}
 ]
 license = {text = "MIT"}
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.9"
 dependencies = [
-    "rdkit (>=2025.3.5,<2026.0.0)",
+    "rdkit",
     "pandas (>=2.3.2,<3.0.0)"
 ]
 
@@ -25,6 +25,7 @@ pytest = "^8.4.1"
 pre-commit = "^4.3.0"
 ruff = "^0.12.10"
 mypy = "^1.17.1"
+pytest-cov = "^6.2.1"
 
 [tool.ruff.lint]
 select = [
