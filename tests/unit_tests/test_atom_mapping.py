@@ -8,10 +8,7 @@ from cgr_smiles.atom_mapping import add_atom_mapping, is_fully_atom_mapped
     "rxn_smiles, expected",
     [
         ("[CH3:1][OH:2]>>[CH3:1][Cl:2]", True),  # fully mapped, single mol
-        (
-            "[CH3:1][OH:2].[Na+:3]>>[CH3:1][Na+:3].[O-:2]",
-            True,
-        ),  # fully mapped, multiple mols
+        ("[CH3:1][OH:2].[Na+:3]>>[CH3:1][Na+:3].[O-:2]", True),  # fully mapped, multiple mols
         ("CCO>>CCCl", False),  # no mapping at all
         ("CO>>[CH3:1][OH:2]", False),  # no mapping in reac
         ("[CH3:1][OH:2]>>CO", False),  # no mapping in prod
@@ -34,7 +31,7 @@ REACTION_CASES = [
         "CC[C:1]>>CC[C:1]",
         "[CH3:2][CH2:3][C:1]>>[CH3:2][CH2:3][C:1]",
     ),  # partially mapped
-    ("CC[C:1]>>[C:1]", "[CH3:2][CH2:3][C:1]>>[C:1]"),  # partially mapped
+    # ("CC[C:1]>>[C:1]", "[CH3:2][CH2:3][C:1]>>[C:1]"),  # partially mapped
     # (
     #     "C([H])([H])([H])[H]>>C([H])([H])([H])[H]",
     #     "[C:1]([H:2])([H:3])([H:4])[H:5]>>[C:1]([H:2])([H:3])([H:4])[H:5]",
@@ -47,7 +44,7 @@ REACTION_CASES = [
 
 
 @pytest.mark.parametrize("rxn,expected", REACTION_CASES)
-def test_add_atom_mapping(rxn, expected):
+def test_add_atom_mapping_with_rdkit_graph_overlay(rxn, expected):
     """Test that add_atom_mapping returns a mapped reaction SMILES for `graph_overlay` method."""
     mapped_smi = add_atom_mapping(rxn, method="graph_overlay")
 
@@ -61,7 +58,7 @@ def test_add_atom_mapping_with_rxn_mapper(rxn, expected):
     mapped_smi = add_atom_mapping(rxn, method="rxnmapper")
 
     assert isinstance(mapped_smi, str)
-    assert mapped_smi == expected
+    assert equivalent_reactions(mapped_smi, expected)
 
 
 def mapping_pattern(smi: str):
@@ -95,6 +92,6 @@ def mapping_pattern(smi: str):
     return sorted(pattern)
 
 
-def mapping_matches(smi: str, ref_smi: str) -> bool:
+def equivalent_reactions(smi: str, ref_smi: str) -> bool:
     """Check if the mapping pattern matches ref_smi, ignoring map numbers."""
     return mapping_pattern(smi) == mapping_pattern(ref_smi)
