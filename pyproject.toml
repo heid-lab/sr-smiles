@@ -10,8 +10,13 @@ readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
     "rdkit",
-    "pandas (>=2.3.2,<3.0.0)"
+    "pandas (>=2.3.2,<3.0.0)",
+    "rich (>=14.1.0,<15.0.0)"
 ]
+
+[project.scripts]
+rxn2cgr = "cgr_smiles.cli:main_rxn2cgr"
+cgr2rxn = "cgr_smiles.cli:main_cgr2rxn"
 
 [project.optional-dependencies]
 rxnmapper = ["rxnmapper (>=0.4.2,<0.5.0)"]
@@ -42,3 +47,9 @@ line-length = 110
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
+
+[tool.pytest.ini_options]
+markers = [
+    "unit: mark a test as a unit test",
+    "e2e: mark a test as an end-to-end test"
+]

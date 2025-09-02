@@ -74,6 +74,7 @@ initialize_failures_csv_file()
 test_cases, ids = generate_individual_tests()
 
 
+@pytest.mark.e2e
 @pytest.mark.parametrize("file_path, idx, rxn_smiles, rxn_col", test_cases, ids=ids)
 def test_roundtrip_per_sample(file_path, idx, rxn_smiles, rxn_col):
     """Test single sample roundtrip (RXN -> CGR -> RXN)."""

@@ -5,7 +5,7 @@ logger.setLevel(logging.WARNING)
 
 if not logger.handlers:
     console_handler = logging.StreamHandler()
-    console_handler.setLevel(logging.WARNING)
+    console_handler.setLevel(logging.NOTSET)
     formatter = logging.Formatter(
         fmt="[{asctime}] {levelname}: {message}",
         style="{",
