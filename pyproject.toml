@@ -31,6 +31,11 @@ pre-commit = "^4.3.0"
 ruff = "^0.12.10"
 mypy = "^1.17.1"
 pytest-cov = "^6.2.1"
+sphinx = "~7.3.0"
+furo = "^2025.7.19"
+sphinx-autodoc-typehints = "~1.18.0"
+sphinx-togglebutton = "^0.3.2"
+nbsphinx = "^0.9.7"
 
 [tool.ruff.lint]
 select = [
@@ -45,7 +50,8 @@ ignore = ["D100"]
 [tool.ruff]
 line-length = 110
 exclude = [
-    "examples/01_basic_usage.ipynb"
+    "examples/01_basic_usage.ipynb",
+    "docs/source/notebooks/demo.ipynb"
 ]
 
 [tool.ruff.lint.pydocstyle]
