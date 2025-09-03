@@ -1,0 +1,32 @@
+# .readthedocs.yaml
+# Read the Docs configuration file
+# See https://docs.readthedocs.io/en/stable/config-file/v2.html for details
+
+# Required
+version: 2
+
+# Set the version of Python and other tools you might need
+build:
+  os: ubuntu-22.04
+  tools:
+    python: "3.9"
+  apt_packages:
+    - pandoc
+
+  # Build Sphinx documentation
+  # See https://docs.readthedocs.io/en/stable/config-file/v2.html#conf-file
+  jobs:
+    post_install:
+      # Install your project and its dev dependencies using Poetry
+      - poetry install --no-root --only dev
+      # Poetry install the project's main dependencies and the project itself
+      - poetry install --with dev --sync
+
+
+# Where your Sphinx config file (conf.py) is located
+sphinx:
+  configuration: docs/source/conf.py # This path is relative to the repository root
+
+# The format of your documentation (e.g. html, pdf)
+formats:
+  - html
