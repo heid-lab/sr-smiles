@@ -1,5 +1,9 @@
 bin
 
+# documentations
+docs/Makefile
+docs/make.bat
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
