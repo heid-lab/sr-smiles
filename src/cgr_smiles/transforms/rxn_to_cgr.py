@@ -5,6 +5,7 @@ import pandas as pd
 from rdkit import Chem
 
 from cgr_smiles.logger import logger
+from cgr_smiles.reaction_balancing import balance_reaction, is_rxn_balanced
 from cgr_smiles.utils import (
     ORGANIC_SUBSET,
     TokenType,
@@ -104,6 +105,7 @@ class RxnToCgr:
         keep_atom_mapping (bool): Whether to preserve atom mapping in the output.
         remove_brackets (bool): Whether to remove brackets from the SMILES.
         remove_hydrogens (bool): Whether to remove explicit hydrogens.
+        balance_rxn (bool): Whether to balance the given reaction.
         rxn_col (Optional[str]): Column name in a DataFrame containing reaction SMILES.
 
     Examples:
@@ -120,6 +122,7 @@ class RxnToCgr:
         keep_atom_mapping: bool = False,
         remove_brackets: bool = False,
         remove_hydrogens: bool = False,
+        balance_rxn: bool = False,
         rxn_col: Optional[str] = None,
     ) -> None:
         """Initialize the transformation object.
@@ -131,12 +134,15 @@ class RxnToCgr:
                 the SMILES. Defaults to False.
             remove_hydrogens (bool, optional): If True, remove explicit
                 hydrogens. Defaults to False.
+            balance_rxn (bool, optional): If True, attempts to balance the reaction
+                before generating the CGR. Defaults to False.
             rxn_col (str, optional): Column name in a DataFrame containing
                 reaction SMILES. Required if passing a DataFrame. Defaults to None.
         """
         self.keep_atom_mapping = keep_atom_mapping
         self.remove_brackets = remove_brackets
         self.remove_hydrogens = remove_hydrogens
+        self.balance_rxn = balance_rxn
         self.rxn_col = rxn_col
 
     def __call__(
@@ -163,6 +169,7 @@ class RxnToCgr:
                 keep_atom_mapping=self.keep_atom_mapping,
                 remove_brackets=self.remove_brackets,
                 remove_hydrogens=self.remove_hydrogens,
+                balance_rxn=self.balance_rxn,
             )
 
         elif isinstance(data, list):
@@ -195,6 +202,7 @@ def rxn_to_cgr(
     keep_atom_mapping: bool = False,
     remove_brackets: bool = False,
     remove_hydrogens: bool = False,
+    balance_rxn: bool = False,
 ) -> str:
     """Converts a reaction SMILES string into a Condensed Graph of Reaction (CGR) SMILES.
 
@@ -210,6 +218,8 @@ def rxn_to_cgr(
             in the output CGR SMILES. Otherwise they will be kept (default).
         remove_hydrogens (bool): If True, explicit hydrogens will be removed in the
             output CGR SMILES. Otherwise they will be kept (default).
+        balance_rxn (bool, optional): If True, attempts to balance the reaction
+            before generating the CGR. Defaults to False.
 
     Returns:
         str: A CGR SMILES string representing the reaction as a single molecule
@@ -232,6 +242,10 @@ def rxn_to_cgr(
         # formed between them in the product molecule.
     """
     try:
+        if balance_rxn:
+            if not is_rxn_balanced(rxn_smi):
+                rxn_smi = balance_reaction(rxn_smi)
+
         # TODO: check if rxn_smiles is atom mapped, if not, add mapping.
         # TODO: maybe let this function make the assumption of balanced, fully mapped reactions.
         # Handling of the preparation, shall the wrapper do.

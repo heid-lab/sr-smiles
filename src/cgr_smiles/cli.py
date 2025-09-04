@@ -67,6 +67,7 @@ def main_rxn2cgr():
     parser.add_argument("--keep-atom-mapping", action="store_true", help="Preserve atom mapping")
     parser.add_argument("--remove-brackets", action="store_true", help="Remove brackets")
     parser.add_argument("--remove-hydrogens", action="store_true", help="Remove explicit hydrogens")
+    parser.add_argument("--balance_rxn", action="store_true", help="Balance the given reaction")
 
     args = parser.parse_args()
 
@@ -88,6 +89,7 @@ def main_rxn2cgr():
         keep_atom_mapping=args.keep_atom_mapping,
         remove_brackets=args.remove_brackets,
         remove_hydrogens=args.remove_hydrogens,
+        balance_rxn=args.balance_rxn,
         rxn_col=args.rxn_col,
     )
 
