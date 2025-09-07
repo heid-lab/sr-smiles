@@ -87,6 +87,14 @@ def test_rxn_to_cgr_e_z_stereo(idx, rxn_smiles, cgr_smiles):
     assert result == cgr_smiles, f"Assertion error for reaction with id {idx}"
 
 
+@pytest.mark.parametrize("use_aromaticity", [(True), (False)])
+def test_rxn_to_cgr_use_aromaticity(use_aromaticity):
+    """Test use_aromaticity flag (True, False) in `rxn_to_cgr()`."""
+    rxn_smi = "[CH:5]1=[C:1]([C:2]([CH3:3])=[O:4])[CH:9]=[C:8]2[C:7](=[CH:6]1)[NH:12][CH:11]=[CH:10]2.[O:20]([C:21]([O:22][C:23]([CH3:24])([CH3:26])[CH3:25])=[O:27])[C:13](=[O:14])[O:15][C:16]([CH3:17])([CH3:18])[CH3:19]>>[C:1]1([C:2]([CH3:3])=[O:4])=[CH:5][CH:6]=[C:7]2[C:8](=[CH:9]1)[CH:10]=[CH:11][N:12]2[C:13](=[O:14])[O:15][C:16]([CH3:17])([CH3:18])[CH3:19]"  # noqa: E501
+    cgr_smi = rxn_to_cgr(rxn_smi, balance_rxn=True, use_aromaticity=use_aromaticity)
+    assert use_aromaticity == ("c" in cgr_smi)
+
+
 def test_rxn_to_cgr_invalid_smiles(propagated_logger, caplog):
     """Verify that invalid RXN SMILES input logs a warning and returns an empty string."""
     bad_smi = "INVALID-RXN-SMILES"

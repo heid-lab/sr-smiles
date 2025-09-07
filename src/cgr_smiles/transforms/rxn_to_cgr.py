@@ -124,6 +124,7 @@ class RxnToCgr:
         remove_hydrogens: bool = False,
         balance_rxn: bool = False,
         rxn_col: Optional[str] = None,
+        use_aromaticity: bool = True,
     ) -> None:
         """Initialize the transformation object.
 
@@ -138,12 +139,17 @@ class RxnToCgr:
                 before generating the CGR. Defaults to False.
             rxn_col (str, optional): Column name in a DataFrame containing
                 reaction SMILES. Required if passing a DataFrame. Defaults to None.
+            use_aromaticity (bool, optional): If True, RDKit aromaticity perception is applied
+                during sanitization, and aromatic atoms will be written in lowercase (e.g. "c").
+                If False, aromaticity perception is skipped, and atoms will be written in
+                uppercase (e.g. "C"). Defaults to True.
         """
         self.keep_atom_mapping = keep_atom_mapping
         self.remove_brackets = remove_brackets
         self.remove_hydrogens = remove_hydrogens
         self.balance_rxn = balance_rxn
         self.rxn_col = rxn_col
+        self.use_aromaticity = use_aromaticity
 
     def __call__(
         self, data: Union[str, List[str], pd.Series, pd.DataFrame]
@@ -170,10 +176,17 @@ class RxnToCgr:
                 remove_brackets=self.remove_brackets,
                 remove_hydrogens=self.remove_hydrogens,
                 balance_rxn=self.balance_rxn,
+                use_aromaticity=self.use_aromaticity,
             )
 
         elif isinstance(data, list):
-            return [self(d) for d in data]
+            result = [self(d) for d in data]
+            n_empty = sum(1 for item in result if item == "")
+            if len(result) > 0:
+                logger.warning(
+                    f"Failed for {n_empty} out of {len(result)} samples ({n_empty / len(result) * 100} %). "
+                )
+            return result
 
         elif isinstance(data, pd.Series):
             return data.apply(self)
@@ -203,6 +216,7 @@ def rxn_to_cgr(
     remove_brackets: bool = False,
     remove_hydrogens: bool = False,
     balance_rxn: bool = False,
+    use_aromaticity: bool = True,
 ) -> str:
     """Converts a reaction SMILES string into a Condensed Graph of Reaction (CGR) SMILES.
 
@@ -220,6 +234,10 @@ def rxn_to_cgr(
             output CGR SMILES. Otherwise they will be kept (default).
         balance_rxn (bool, optional): If True, attempts to balance the reaction
             before generating the CGR. Defaults to False.
+        use_aromaticity (bool, optional): If True, RDKit aromaticity perception is applied
+            during sanitization, and aromatic atoms will be written in lowercase (e.g. "c").
+            If False, aromaticity perception is skipped, and atoms will be written in
+            uppercase (e.g. "C"). Defaults to True.
 
     Returns:
         str: A CGR SMILES string representing the reaction as a single molecule
@@ -242,9 +260,13 @@ def rxn_to_cgr(
         # formed between them in the product molecule.
     """
     try:
-        if balance_rxn:
-            if not is_rxn_balanced(rxn_smi):
-                rxn_smi = balance_reaction(rxn_smi)
+        if not is_rxn_balanced(rxn_smi):
+            if balance_rxn:
+                rxn_smi = balance_reaction(rxn_smi, use_aromaticity=use_aromaticity)
+            else:
+                raise ValueError(
+                    "The given rxn is not balanced. To enable cgr transform, set `balance_reaction=True`."
+                )
 
         # TODO: check if rxn_smiles is atom mapped, if not, add mapping.
         # TODO: maybe let this function make the assumption of balanced, fully mapped reactions.
@@ -255,7 +277,10 @@ def rxn_to_cgr(
         #     rxn_smi = add_atom_mapping(rxn_smi)
 
         smi_reac, _, smi_prod = rxn_smi.split(">")
-        mol_reac, mol_prod = make_mol(smi_reac), make_mol(smi_prod)
+        mol_reac, mol_prod = (
+            make_mol(smi_reac, use_aromaticity=use_aromaticity),
+            make_mol(smi_prod, use_aromaticity=use_aromaticity),
+        )
 
         ri2pi = map_reac_to_prod(mol_reac, mol_prod)
 
@@ -273,7 +298,7 @@ def rxn_to_cgr(
 
         mol_cgr = mol_cgr.GetMol()
         smi_cgr = Chem.MolToSmiles(mol_cgr, canonical=False)
-        mol_cgr = make_mol(smi_cgr, sanitize=False)
+        mol_cgr = make_mol(smi_cgr, sanitize=False, use_aromaticity=use_aromaticity)
 
         # reorder reac and prod molecule so we get the relative stereochemistry tags right:
         # TODO: by doing the reordering, we basically canonicalize and make it a non-injective mapping

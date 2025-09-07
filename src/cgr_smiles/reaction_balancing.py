@@ -98,7 +98,7 @@ def is_rxn_mapped(rxn_smi: str) -> bool:
 # our assumption: if we receive an unbalanced, partially mapped reaction,
 # we assume the mapping is present for the intersection of atoms that occour
 # in both reac and prod. Otherwise, we delete the mapping, and create a new one.
-def balance_reaction(rxn_smiles: str) -> str:
+def balance_reaction(rxn_smiles: str, use_aromaticity: bool = True) -> str:
     """Balance a reaction by ensuring all atom map numbers are consistent between reactants and products.
 
     This function takes a reaction SMILES string and adds any missing atoms or bonds
@@ -108,12 +108,19 @@ def balance_reaction(rxn_smiles: str) -> str:
     Args:
         rxn_smiles (str): A reaction SMILES string in the format "reactants>>products",
             where each side may contain atoms with mapping numbers.
+        use_aromaticity (bool, optional): If True, RDKit aromaticity perception is applied
+            during sanitization, and aromatic atoms will be written in lowercase (e.g. "c").
+            If False, aromaticity perception is skipped, and atoms will be written in
+            uppercase (e.g. "C"). Defaults to True.
 
     Returns:
         str: A balanced reaction SMILES string with consistent atom mapping between reactants and products.
     """
     smi_reac, smi_prod = rxn_smiles.split(">>")
-    mol_reac, mol_prod = make_mol(smi_reac), make_mol(smi_prod)
+    mol_reac, mol_prod = (
+        make_mol(smi_reac, use_aromaticity=use_aromaticity),
+        make_mol(smi_prod, use_aromaticity=use_aromaticity),
+    )
 
     # Editable version of reactant mol
     rw_reac = Chem.RWMol(mol_reac)

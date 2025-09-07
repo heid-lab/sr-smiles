@@ -453,13 +453,17 @@ def includes_individually_mapped_hydrogens(smiles: str) -> bool:
         return res
 
 
-def make_mol(smi: str, sanitize: bool = True) -> Chem.Mol:
+def make_mol(smi: str, sanitize: bool = True, use_aromaticity: bool = True) -> Chem.Mol:
     """Creates an RDKit molecule object from a SMILES string, with optional sanitization.
 
     Args:
         smi (str): A SMILES string representing the molecule.
         sanitize (bool, optional): Whether to sanitize the molecule after parsing. Defaults to True.
             Sanitization applies all standard checks except hydrogen adjustment.
+        use_aromaticity (bool, optional): If True, RDKit aromaticity perception is applied
+            during sanitization, and aromatic atoms will be written in lowercase (e.g. "c").
+            If False, aromaticity perception is skipped, and atoms will be written in
+            uppercase (e.g. "C"). Defaults to True.
 
     Returns:
         Chem.Mol: An RDKit molecule object constructed from the SMILES string.
@@ -467,12 +471,19 @@ def make_mol(smi: str, sanitize: bool = True) -> Chem.Mol:
     # includes_individually_mapped_hs = includes_individually_mapped_hydrogens(smi)
     # if includes_individually_mapped_hs:
 
+    if ">>" in smi:
+        raise ValueError(
+            "It looks like `make_mol()` was givena reaction smiles, instead of a smiles of a single molecule."
+        )
+
     mol = Chem.MolFromSmiles(smi, sanitize=False)
     if sanitize:
-        Chem.SanitizeMol(
-            mol,
-            sanitizeOps=Chem.SanitizeFlags.SANITIZE_ALL ^ Chem.SanitizeFlags.SANITIZE_ADJUSTHS,
-        )
+        sanitize_flags = Chem.SanitizeFlags.SANITIZE_ALL ^ Chem.SanitizeFlags.SANITIZE_ADJUSTHS
+        if not use_aromaticity:
+            sanitize_flags ^= Chem.SanitizeFlags.SANITIZE_SETAROMATICITY
+
+        Chem.SanitizeMol(mol, sanitizeOps=sanitize_flags)
+
     Chem.AssignStereochemistry(mol)
 
     try:
