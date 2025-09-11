@@ -85,6 +85,12 @@ def main_rxn2cgr():
         dest="use_aromaticity",
         help="Ignore aromaticity perception during sanitization (default: use aromaticity)",
     )
+    parser.add_argument(
+        "--ignore-aromatic-bonds",
+        action="store_false",
+        dest="keep_aromatic_bonds",
+        help="",
+    )
     args = parser.parse_args()
 
     print_banner(
@@ -108,6 +114,7 @@ def main_rxn2cgr():
         balance_rxn=args.balance_rxn,
         rxn_col=args.rxn_col,
         use_aromaticity=args.use_aromaticity,
+        keep_aromatic_bonds=args.keep_aromatic_bonds,
     )
 
     tqdm.pandas()

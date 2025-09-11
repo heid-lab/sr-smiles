@@ -94,6 +94,24 @@ def remove_redundant_brackets(cgr: str) -> str:
     return cgr
 
 
+def remove_aromatic_bonds(cgr_smiles: str) -> str:
+    """Remove ':' used as bond descriptors, while preserving ':' used for atom mapping inside []."""
+    result = []
+    in_brackets = False
+    for char in cgr_smiles:
+        if char == "[":
+            in_brackets = True
+        elif char == "]":
+            in_brackets = False
+
+        # drop ':' if outside brackets (bond), else keep it
+        if char == ":" and not in_brackets:
+            continue
+        result.append(char)
+
+    return "".join(result)
+
+
 class RxnToCgr:
     """Transform reaction SMILES into CGR SMILES.
 
@@ -125,6 +143,7 @@ class RxnToCgr:
         balance_rxn: bool = False,
         rxn_col: Optional[str] = None,
         use_aromaticity: bool = True,
+        keep_aromatic_bonds: bool = True,
     ) -> None:
         """Initialize the transformation object.
 
@@ -143,6 +162,7 @@ class RxnToCgr:
                 during sanitization, and aromatic atoms will be written in lowercase (e.g. "c").
                 If False, aromaticity perception is skipped, and atoms will be written in
                 uppercase (e.g. "C"). Defaults to True.
+            keep_aromatic_bonds: TODO
         """
         self.keep_atom_mapping = keep_atom_mapping
         self.remove_brackets = remove_brackets
@@ -150,6 +170,7 @@ class RxnToCgr:
         self.balance_rxn = balance_rxn
         self.rxn_col = rxn_col
         self.use_aromaticity = use_aromaticity
+        self.keep_aromatic_bonds = keep_aromatic_bonds
 
     def __call__(
         self, data: Union[str, List[str], pd.Series, pd.DataFrame]
@@ -177,6 +198,7 @@ class RxnToCgr:
                 remove_hydrogens=self.remove_hydrogens,
                 balance_rxn=self.balance_rxn,
                 use_aromaticity=self.use_aromaticity,
+                keep_aromatic_bonds=self.keep_aromatic_bonds,
             )
 
         elif isinstance(data, list):
@@ -217,6 +239,7 @@ def rxn_to_cgr(
     remove_hydrogens: bool = False,
     balance_rxn: bool = False,
     use_aromaticity: bool = True,
+    keep_aromatic_bonds: bool = True,
 ) -> str:
     """Converts a reaction SMILES string into a Condensed Graph of Reaction (CGR) SMILES.
 
@@ -238,6 +261,7 @@ def rxn_to_cgr(
             during sanitization, and aromatic atoms will be written in lowercase (e.g. "c").
             If False, aromaticity perception is skipped, and atoms will be written in
             uppercase (e.g. "C"). Defaults to True.
+        keep_aromatic_bonds: TODO
 
     Returns:
         str: A CGR SMILES string representing the reaction as a single molecule
@@ -437,6 +461,9 @@ def rxn_to_cgr(
 
         elif remove_brackets:
             smi_cgr = remove_redundant_brackets(smi_cgr)
+
+        if not keep_aromatic_bonds:
+            smi_cgr = remove_aromatic_bonds(smi_cgr)
 
         return smi_cgr
 
