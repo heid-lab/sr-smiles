@@ -29,12 +29,15 @@ def augment_atom_traversal_order(
 
     rng = random_state if random_state is not None else random.Random()
 
-    atom_nums = list(range(mol_reac.GetNumAtoms()))
-    rng.shuffle(atom_nums)
-    mol_reac = Chem.RenumberAtoms(mol_reac, atom_nums)
+    # reac shuffle
+    atom_nums_reac = list(range(mol_reac.GetNumAtoms()))
+    rng.shuffle(atom_nums_reac)
+    mol_reac = Chem.RenumberAtoms(mol_reac, atom_nums_reac)
 
-    rng.shuffle(atom_nums)
-    mol_prod = Chem.RenumberAtoms(mol_prod, atom_nums)
+    # prod shuffle
+    atom_nums_prod = list(range(mol_prod.GetNumAtoms()))
+    rng.shuffle(atom_nums_prod)
+    mol_prod = Chem.RenumberAtoms(mol_prod, atom_nums_prod)
 
     r_smi_shuffled = Chem.MolToSmiles(mol_reac, canonical=False)
     p_smi_shuffled = Chem.MolToSmiles(mol_prod, canonical=False)
