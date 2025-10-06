@@ -26,25 +26,30 @@ def augment_atom_traversal_order(
         str: Augmented reaction SMILES.
     """
     r, _, p = rxn_smiles.split(">")
-    mol_reac = make_mol(r, kekulize=kekulize)
-    mol_prod = make_mol(p, kekulize=kekulize)
+    mol_r = make_mol(r, kekulize=kekulize)
+    mol_p = make_mol(p, kekulize=kekulize)
 
-    rng = random_state if random_state is not None else random.Random()
+    # Pick a random atom map shared by both
+    shared_maps = list(
+        set(a.GetAtomMapNum() for a in mol_r.GetAtoms() if a.GetAtomMapNum() > 0)
+        & set(a.GetAtomMapNum() for a in mol_p.GetAtoms() if a.GetAtomMapNum() > 0)
+    )
 
-    # reac shuffle
-    atom_nums_reac = list(range(mol_reac.GetNumAtoms()))
-    rng.shuffle(atom_nums_reac)
-    mol_reac = Chem.RenumberAtoms(mol_reac, atom_nums_reac)
+    if not shared_maps:
+        return r + ">>" + p  # nothing to align on
 
-    # prod shuffle
-    atom_nums_prod = list(range(mol_prod.GetNumAtoms()))
-    rng.shuffle(atom_nums_prod)
-    mol_prod = Chem.RenumberAtoms(mol_prod, atom_nums_prod)
+    rng = random_state or random
+    root_map = rng.choice(shared_maps)
 
-    r_smi_shuffled = Chem.MolToSmiles(mol_reac, canonical=False)
-    p_smi_shuffled = Chem.MolToSmiles(mol_prod, canonical=False)
+    # get the atom indices corresponding to that map on each side
+    root_r = next(a.GetIdx() for a in mol_r.GetAtoms() if a.GetAtomMapNum() == root_map)
+    root_p = next(a.GetIdx() for a in mol_p.GetAtoms() if a.GetAtomMapNum() == root_map)
 
-    return ">>".join([r_smi_shuffled, p_smi_shuffled])
+    # produce smiles rooted at those atoms
+    r_smi = Chem.MolToSmiles(mol_r, canonical=False, rootedAtAtom=root_r)
+    p_smi = Chem.MolToSmiles(mol_p, canonical=False, rootedAtAtom=root_p)
+
+    return r_smi + ">>" + p_smi
 
 
 def augment_reassign_atom_map_nums(rxn_smiles: str) -> str:
