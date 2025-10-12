@@ -3,22 +3,23 @@ import pytest
 from conftest import equivalent_reactions
 from rdkit import Chem
 
+from cgr_smiles import ROOT_DIR
+from cgr_smiles.chem_utils.smiles_utils import canonicalize
 from cgr_smiles.transforms.cgr_to_rxn import (
     CgrToRxn,
     add_atom_mapping_to_cgr,
     cgr_to_rxn,
-    find_cis_trans_stereo_bonds,
+    find_e_z_stereo_bonds,
     get_chiral_center_map_nums,
     get_reac_prod_scaffold_smiles_from_cgr,
     is_cgr_smiles_fully_atom_mapped,
     is_kekule,
-    parse_bonds_from_smiles,
+    parse_bonds_in_order_from_smiles,
     remove_bonds_by_atom_map_nums,
     update_chirality_tags,
-    update_cis_trans_stereo_chem,
+    update_e_z_stereo_chem,
 )
 from cgr_smiles.transforms.rxn_to_cgr import rxn_to_cgr
-from cgr_smiles.utils import ROOT_DIR, canonicalize
 
 # TODO: test case: F/C=C/C=C/C
 # TODO test for correct parsing of the bonds (all are valid):
@@ -114,7 +115,7 @@ def test_cgr_to_rxn_invalid_smiles(propagated_logger, caplog):
 
     record = caplog.records[0]
     assert record.levelname == "WARNING"
-    assert "Failed to process CGR-SMILES" in record.message, record.message
+    assert "Failed to process CGR SMILES" in record.message, record.message
     # assert "Returning empty string." in record.message
 
 
@@ -181,7 +182,7 @@ def test_cgr_to_rxn_e_z_stereo(idx, rxn_smiles, cgr_smiles):
     assert can_res == can_rxn, f"Assertion error for reaction with id {idx}"
 
 
-def test_parse_bonds_from_smiles():
+def test_parse_bonds_in_order_from_smiles():
     """Verify correct parsing of bonds and stereochemistry from a SMILES string."""
     smiles = "[c:1]1([n:2][n:3][c:4]([H:8])[n:5][n:6]1)[CH3:9]/[N:10]=[N:11]\\[CH3:12]"
     expected_output = {
@@ -198,7 +199,7 @@ def test_parse_bonds_from_smiles():
         (11, 12): "\\",
     }
 
-    assert parse_bonds_from_smiles(smiles) == expected_output
+    assert parse_bonds_in_order_from_smiles(smiles) == expected_output
 
 
 def test_remove_bonds_by_atom_map_nums():
@@ -252,7 +253,7 @@ def test_update_chirality_tags_with_flip():
     assert modified_smiles == expected_output
 
 
-def test_find_cis_trans_stereo_bonds():
+def test_find_e_z_stereo_bonds():
     """Verify detection of cis/trans stereochemistry bonds in a bond dictionary."""
     bonds = {
         (1, 2): "-",
@@ -264,7 +265,7 @@ def test_find_cis_trans_stereo_bonds():
         (6, 7): "=",
         (7, 8): "\\",
     }
-    result = find_cis_trans_stereo_bonds(bonds)
+    result = find_e_z_stereo_bonds(bonds)
     expected_output = {
         (6, 7): {"stereo": Chem.BondStereo.STEREOZ, "terminal_atoms": (5, 8)},
         (7, 6): {"stereo": Chem.BondStereo.STEREOZ, "terminal_atoms": (8, 5)},
@@ -272,7 +273,7 @@ def test_find_cis_trans_stereo_bonds():
     assert result == expected_output
 
 
-def test_update_cis_trans_stereo_chem_cis_update():
+def test_update_e_z_stereo_chem_cis_update():
     """Tests that a double bond's stereochemistry is correctly updated to cis."""
     smiles = "[c:1]1([CH2:9]/[N:10]=[N:11]/[CH3:12])[n:2][n:3][cH:4][n:5][n:6]1"
     mol = Chem.MolFromSmiles(smiles)
@@ -291,12 +292,12 @@ def test_update_cis_trans_stereo_chem_cis_update():
         (1, 6): "-",
     }
 
-    modified_mol = update_cis_trans_stereo_chem(mol, parsed_bonds_data)
+    modified_mol = update_e_z_stereo_chem(mol, parsed_bonds_data)
     modified_smiles = Chem.MolToSmiles(modified_mol, canonical=False)
     assert modified_smiles == "[c:1]1([CH2:9]/[N:10]=[N:11]\\[CH3:12])[n:2][n:3][cH:4][n:5][n:6]1"
 
 
-def test_update_cis_trans_stereo_chem_trans_update():
+def test_update_e_z_stereo_chem_trans_update():
     """Tests that a double bond's stereochemistry is correctly updated to trans."""
     smiles = "[c:1]1([CH2:9][N:10]=[N:11][CH3:12])[n:2][n:3][cH:4][n:5][n:6]1"
     mol = Chem.MolFromSmiles(smiles)
@@ -315,12 +316,12 @@ def test_update_cis_trans_stereo_chem_trans_update():
         (1, 6): "-",
     }
 
-    modified_mol = update_cis_trans_stereo_chem(mol, parsed_bonds_data)
+    modified_mol = update_e_z_stereo_chem(mol, parsed_bonds_data)
     modified_smiles = Chem.MolToSmiles(modified_mol, canonical=False)
     assert modified_smiles == "[c:1]1([CH2:9]/[N:10]=[N:11]/[CH3:12])[n:2][n:3][cH:4][n:5][n:6]1"
 
 
-def test_update_cis_trans_stereo_chem_with_disconnected_molecule():
+def test_update_e_z_stereo_chem_with_disconnected_molecule():
     """Tests that a double bond's stereochemistry is correctly updated to trans."""
     smiles = "[c:1]1([CH2:9][N:10]=[N:11][CH3:12])[n:2][n:3][cH:4][n:5][n:6]1.[CH4:13]"
     mol = Chem.MolFromSmiles(smiles)
@@ -339,7 +340,7 @@ def test_update_cis_trans_stereo_chem_with_disconnected_molecule():
         (1, 6): "-",
     }
 
-    modified_mol = update_cis_trans_stereo_chem(mol, parsed_bonds_data)
+    modified_mol = update_e_z_stereo_chem(mol, parsed_bonds_data)
     modified_smiles = Chem.MolToSmiles(modified_mol, canonical=False)
     assert modified_smiles == "[c:1]1([CH2:9]/[N:10]=[N:11]/[CH3:12])[n:2][n:3][cH:4][n:5][n:6]1.[CH4:13]"
 
@@ -476,7 +477,7 @@ def test_CgrToRxn_empty_inputs(empty_input, expected_type):
     ],
 )
 def test_is_cgr_smiles_fully_atom_mapped(cgr_smiles, is_fully_mapped):
-    """Check if a CGR SMILES is fully atom mapped."""
+    """Check if a CGR SMILES is fully atom-mapped."""
     assert is_cgr_smiles_fully_atom_mapped(cgr_smiles) == is_fully_mapped
 
 

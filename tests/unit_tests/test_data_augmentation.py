@@ -4,12 +4,12 @@ from typing import List
 import pytest
 from rdkit import Chem
 
+from cgr_smiles.chem_utils.mol_utils import make_mol
 from cgr_smiles.data_augmentation import (
     augment_atom_traversal_order,
     augment_reassign_atom_map_nums,
     augment_rxn_smiles,
 )
-from cgr_smiles.utils import make_mol
 
 
 @pytest.fixture
@@ -38,30 +38,6 @@ def test_augment_atom_traversal_order(rxn_smiles):
 
     assert mols_equal(r, r_aug), "Augmented reac mol is not the same as the original reac mol."
     assert mols_equal(p, p_aug), "Augmented prod mol is not the same as the original prod mol."
-
-
-# def test_augment_atom_traversal_order_deterministic(rxn_smiles):
-#     """Check that atom traversal order augmentation is deterministic with a fixed RNG seed."""
-#     initial_seed = 123
-#     num_augmentation = 10
-
-#     rng_run1 = random.Random(initial_seed)
-#     results_run1 = []
-#     for _ in range(num_augmentation):
-#         results_run1.append(augment_atom_traversal_order(rxn_smiles, random_state=rng_run1))
-
-#     rng_run2 = random.Random(initial_seed)
-#     results_run2 = []
-#     for _ in range(num_augmentation):
-#         results_run2.append(augment_atom_traversal_order(rxn_smiles, random_state=rng_run2))
-
-#     # check that the entire sequence of results from run1 matches run2
-#     assert (
-#         results_run1 == results_run2
-#     ), "Augmentations with the same RNG seed should produce identical sequences, but differences were found"
-
-
-# test_augment_atom_traversal_order_deterministic("[C:1]([C:2]([C:3]([C:4]([C:5]([C:6]([H:18])([H:19])[H:20])([H:16])[H:17])([H:14])[H:15])([H:12])[H:13])([H:10])[H:11])([H:7])([H:8])[H:9]>>[C:1]([C:2](=[C:3]([H:12])[H:13])[H:11])([H:7])([H:8])[H:9].[C:4](=[C:5]([C:6]([H:18])([H:19])[H:20])[H:16])([H:14])[H:15].[H:10][H:17]")  # noqa: E501
 
 
 def get_atom_map_nums(smi: str) -> List[int]:
@@ -114,3 +90,27 @@ def test_augment_rxn_smiles_parametrized(
         assert (
             rxn_smiles == augmented
         ), "Augmentation was set to `False, output should not differ from original"
+
+
+# def test_augment_atom_traversal_order_deterministic(rxn_smiles):
+#     """Check that atom traversal order augmentation is deterministic with a fixed RNG seed."""
+#     initial_seed = 123
+#     num_augmentation = 10
+
+#     rng_run1 = random.Random(initial_seed)
+#     results_run1 = []
+#     for _ in range(num_augmentation):
+#         results_run1.append(augment_atom_traversal_order(rxn_smiles, random_state=rng_run1))
+
+#     rng_run2 = random.Random(initial_seed)
+#     results_run2 = []
+#     for _ in range(num_augmentation):
+#         results_run2.append(augment_atom_traversal_order(rxn_smiles, random_state=rng_run2))
+
+#     # check that the entire sequence of results from run1 matches run2
+#     assert (
+#         results_run1 == results_run2
+#     ), "Augmentations with the same RNG seed should produce identical sequences, but differences were found"
+
+
+# test_augment_atom_traversal_order_deterministic("[C:1]([C:2]([C:3]([C:4]([C:5]([C:6]([H:18])([H:19])[H:20])([H:16])[H:17])([H:14])[H:15])([H:12])[H:13])([H:10])[H:11])([H:7])([H:8])[H:9]>>[C:1]([C:2](=[C:3]([H:12])[H:13])[H:11])([H:7])([H:8])[H:9].[C:4](=[C:5]([C:6]([H:18])([H:19])[H:20])[H:16])([H:14])[H:15].[H:10][H:17]")  # noqa: E501

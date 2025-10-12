@@ -3,8 +3,9 @@ import csv
 import pytest
 from rxnmapper import RXNMapper
 
+from cgr_smiles import ROOT_DIR
+from cgr_smiles.chem_utils.smiles_utils import get_list_of_atom_map_numbers
 from cgr_smiles.reaction_balancing import balance_reaction
-from cgr_smiles.utils import ROOT_DIR, get_list_of_atom_map_numbers
 
 
 @pytest.fixture(scope="session")

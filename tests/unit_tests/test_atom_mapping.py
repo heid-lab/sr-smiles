@@ -1,7 +1,12 @@
 import pytest
 from conftest import equivalent_reactions
 
-from cgr_smiles.atom_mapping import add_atom_mapping, is_fully_atom_mapped
+from cgr_smiles.atom_mapping import (
+    add_atom_mapping,
+    add_atom_mapping_to_cgr,
+    is_cgr_smiles_fully_atom_mapped,
+    is_fully_atom_mapped,
+)
 
 
 @pytest.mark.parametrize(
@@ -18,9 +23,26 @@ from cgr_smiles.atom_mapping import add_atom_mapping, is_fully_atom_mapped
         ("[CH3:0][OH:2]>>[CH3:0][OH:2]", False),  # invalid zero mapping
     ],
 )
-def test_is_fully_mapped_rxn(rxn_smiles, expected):
+def test_is_fully_atom_mapped(rxn_smiles, expected):
     """Test that `is_fully_atom_mapped` correctly identifies fully mapped reactions."""
     assert is_fully_atom_mapped(rxn_smiles) == expected
+
+
+@pytest.mark.parametrize(
+    "rxn_smiles, expected",
+    [
+        ("[CH3:1][OH:2]", True),  # fully mapped, single mol
+        ("[CH3:1][OH:2]{[CH3:3]|[CH2:3]}", True),  # fully mapped, single mol
+        ("[CH3:1][OH:2].[Na+:3]", True),  # fully mapped, multiple mols
+        ("CCCl", False),  # no mapping at all
+        ("CC{Cl|Br}", False),  # no mapping at all
+        ("C[C:1]{Cl|Br}", False),  # no mapping at all
+        ("CC{[Cl:1]|[Br:1]}", False),  # no mapping at all
+    ],
+)
+def test_is_cgr_smiles_fully_atom_mapped(rxn_smiles, expected):
+    """Test that `is_cgr_smiles_fully_atom_mapped` correctly identifies fully mapped reactions."""
+    assert is_cgr_smiles_fully_atom_mapped(rxn_smiles) == expected
 
 
 REACTION_CASES = [
@@ -59,3 +81,18 @@ def test_add_atom_mapping_with_rxn_mapper(rxn, expected):
 
     assert isinstance(mapped_smi, str)
     assert equivalent_reactions(mapped_smi, expected)
+
+
+@pytest.mark.parametrize(
+    "cgr, expected",
+    [
+        ("C=O", "[C:1]=[O:2]"),
+        ("{C|[C-]}", "{[C:1]|[C-:1]}"),
+        ("{C|N}=O", "{[C:1]|[N:1]}=[O:2]"),
+        ("[C:2]O{-|=}{[CH3]|[CH2]}", "[C:2][O:1]{-|=}{[CH3:3]|[CH2:3]}"),
+    ],
+)
+def test_add_atom_mapping_to_cgr(cgr, expected):
+    """Ensure add_atom_mapping_to_cgr assigns unique continuous map numbers and groups share indices."""
+    result = add_atom_mapping_to_cgr(cgr)
+    assert result == expected, f"For '{cgr}': expected '{expected}', got '{result}'"

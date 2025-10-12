@@ -1,6 +1,6 @@
 import pytest
 
-from cgr_smiles.logger import set_verbose
+from cgr_smiles.io.logger import set_verbose
 
 
 @pytest.fixture(autouse=True)

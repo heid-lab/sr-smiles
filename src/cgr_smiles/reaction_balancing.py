@@ -3,7 +3,8 @@ from collections import Counter
 from rdkit import Chem
 from rdkit.Chem import rdchem
 
-from cgr_smiles.utils import get_list_of_atom_map_numbers, make_mol
+from cgr_smiles.chem_utils.mol_utils import make_mol
+from cgr_smiles.chem_utils.smiles_utils import get_list_of_atom_map_numbers
 
 
 def get_element_counts(smiles: str) -> Counter:
@@ -31,7 +32,7 @@ def get_element_counts(smiles: str) -> Counter:
     return counts
 
 
-def is_rxn_balanced(rxn_smi: str) -> str:
+def is_balanced(rxn_smi: str) -> str:
     """Check whether a reaction SMILES string is atom-balanced.
 
     This function compares the total count of each element in the reactants and products
@@ -80,7 +81,7 @@ def is_rxn_mapped(rxn_smi: str) -> bool:
 
 # def make_balanced_and_fully_mapped(rxn_smi: str) -> str:
 #     is_mapped = is_rxn_mapped(rxn_smi)
-#     is_balanced = is_rxn_balanced(rxn_smi)
+#     is_balanced = is_balanced(rxn_smi)
 #     if is_balanced and is_mapped:
 #         return rxn_smi
 #     elif is_balanced and not is_mapped:

@@ -1,7 +1,7 @@
 import pytest
 from rdkit import Chem
 
-from cgr_smiles.logger import logger
+from cgr_smiles.io.logger import logger
 
 
 @pytest.fixture

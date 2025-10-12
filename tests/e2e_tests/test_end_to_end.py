@@ -4,9 +4,10 @@ import pandas as pd
 import pytest
 from conftest import equivalent_reactions
 
+from cgr_smiles import ROOT_DIR
+from cgr_smiles.chem_utils.smiles_utils import canonicalize
 from cgr_smiles.transforms.cgr_to_rxn import cgr_to_rxn
 from cgr_smiles.transforms.rxn_to_cgr import rxn_to_cgr
-from cgr_smiles.utils import ROOT_DIR, canonicalize
 
 TEST_DATA_PATH = ROOT_DIR / "tests" / "data"
 

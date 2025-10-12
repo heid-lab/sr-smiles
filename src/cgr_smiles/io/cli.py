@@ -32,7 +32,7 @@ def print_banner(
     banner_text = Text()
 
     banner_text.append("👋 Welcome to ", style="bold green")
-    banner_text.append("CGR-SMILES\n", style="bold cyan underline")
+    banner_text.append("CGR SMILES\n", style="bold cyan underline")
 
     banner_text.append("Transforming ", style="yellow")
     banner_text.append(f"{direction.value}", style="bold yellow")

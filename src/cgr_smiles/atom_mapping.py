@@ -1,13 +1,15 @@
+import re
 from typing import Literal
 
 from rdkit import Chem
 from rdkit.Chem import rdFMCS
 
-from cgr_smiles.logger import logger
-from cgr_smiles.utils import (
-    get_atom_map_num_of_mol,
+from cgr_smiles.chem_utils.mol_utils import (
+    get_atom_map_nums_of_mol,
     make_mol,
 )
+from cgr_smiles.chem_utils.smiles_utils import ORGANIC_SUBSET, TokenType, _tokenize
+from cgr_smiles.io.logger import logger
 
 
 def is_fully_atom_mapped(rxn_smiles: str) -> bool:
@@ -25,8 +27,8 @@ def is_fully_atom_mapped(rxn_smiles: str) -> bool:
     """
     smi_reac, _, smi_prod = rxn_smiles.split(">")
     mol_reac, mol_prod = make_mol(smi_reac), make_mol(smi_prod)
-    reac_map_nums = get_atom_map_num_of_mol(mol_reac)
-    prod_map_nums = get_atom_map_num_of_mol(mol_prod)
+    reac_map_nums = get_atom_map_nums_of_mol(mol_reac)
+    prod_map_nums = get_atom_map_nums_of_mol(mol_prod)
     if reac_map_nums is None or prod_map_nums is None:
         raise ValueError("Invalid SMILES in reaction")
 
@@ -36,6 +38,24 @@ def is_fully_atom_mapped(rxn_smiles: str) -> bool:
 
     # mapping numbers match between reactants and products
     return set(reac_map_nums) == set(prod_map_nums)
+
+
+def is_cgr_smiles_fully_atom_mapped(cgr_smiles: str) -> bool:
+    """Checks if a CGR SMILES string is fully atom-mapped.
+
+    Checks according to the following definition:
+    - All CGRTOKENs ({...|...}) must have both alternatives atom-mapped with
+      the SAME map number.
+    - All TOKENs ([...]) must be atom-mapped.
+    """
+    atom_map_pattern = re.compile(r":\d+")
+
+    for tok_type, _, tok in _tokenize(cgr_smiles):
+        if tok_type == TokenType.ATOM:
+            if not atom_map_pattern.search(tok):
+                return False
+
+    return True
 
 
 def add_atom_mapping(
@@ -69,7 +89,7 @@ def add_atom_mapping(
         - RXNMapper may overwrite existing atom mapping, and performance may drop for unbalanced reactions.
         - Graph overlay mapping works for both balanced and unbalanced reactions.
     """
-    # TODO: maybe even do a hybrid approach, where we do rxn_mapper, but if the confidence is low, we do a rule-based mapping.  # noqa: E501
+    # TODO: introduce a hybrid approach, where we do rxn_mapper, but if the confidence is low, we do a rule-based mapping.  # noqa: E501
 
     if method == "rxnmapper":
         logger.warning(
@@ -98,6 +118,87 @@ def add_atom_mapping(
 
     else:
         raise ValueError(f"Unknown method: {method}")
+
+
+def add_atom_mapping_to_cgr(cgr: str) -> str:
+    """Add atom mapping numbers to a CGR SMILES string.
+
+    Each atom gets a continuous unique index: 1, 2, 3, ...
+    Atoms inside the same {...|...} group share one index.
+    """
+    atom_pattern = re.compile(r"(\[[^\]]+\]|[A-Z][a-z]?|[cnops])")
+    mapping_counter = 1
+
+    def insert_mapping(atom, idx):
+        if atom.startswith("["):
+            if re.search(r":\d+", atom) is not None:  # already has mapping
+                return atom
+            return atom[:-1] + f":{idx}]"
+        else:
+            return f"[{atom}:{idx}]"
+
+    out = []
+    i = 0
+
+    preexisting_map_nums = set()
+
+    while i < len(cgr):
+        # before mapping any new atom, make sure counter is unused
+        while mapping_counter in preexisting_map_nums:
+            mapping_counter += 1
+
+        if cgr[i] == "{":  # handle group {...|...}
+            j = cgr.find("}", i)
+            group_content = cgr[i + 1 : j]
+
+            # recursively map inside group using same index
+            group_mapped = atom_pattern.sub(
+                lambda m: insert_mapping(m.group(), mapping_counter), group_content
+            )
+            if re.search(r":\d+", group_mapped) is not None:
+                mapping_counter += 1
+            out.append("{" + group_mapped + "}")
+            i = j + 1
+        else:
+            m = atom_pattern.match(cgr, i)
+            # check if we have an atom token
+            if m:
+                token = m.group()
+
+                # check if token already has a mapping
+                existing_map = re.search(r":(\d+)\]", token)
+                if existing_map:
+                    map_num = int(existing_map.group(1))
+                    preexisting_map_nums.add(map_num)
+                    out.append(token)
+                    i = m.end()
+                    continue
+
+                # check case of uppercase + lowercase (like "Sc")
+                if (
+                    len(token) == 2
+                    and token[0].isupper()
+                    and token[1].islower()
+                    and token not in ORGANIC_SUBSET
+                ):
+                    # split into separate atoms
+                    out.append(insert_mapping(token[0], mapping_counter))
+                    mapping_counter += 1
+
+                    while mapping_counter in preexisting_map_nums:
+                        mapping_counter += 1
+
+                    out.append(insert_mapping(token[1], mapping_counter))
+                    mapping_counter += 1
+                else:
+                    out.append(insert_mapping(token, mapping_counter))
+                    mapping_counter += 1
+
+                i = m.end()
+            else:
+                out.append(cgr[i])
+                i += 1
+    return "".join(out)
 
 
 def maximum_common_substructure_mapping(rxn_smiles: str) -> str:

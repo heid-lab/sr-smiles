@@ -3,7 +3,7 @@ from typing import Optional
 
 from rdkit import Chem
 
-from cgr_smiles.utils import make_mol
+from cgr_smiles.chem_utils.mol_utils import make_mol
 
 
 def augment_atom_traversal_order(
@@ -33,19 +33,16 @@ def augment_atom_traversal_order(
     mol_r = make_mol(r, kekulize=kekulize)
     mol_p = make_mol(p, kekulize=kekulize)
 
-    # Pick a random atom map shared by both
-    shared_maps = (
-        list(  # TODO: get map nums from all fragments. Currently only the largest one is checked I believe
-            set(a.GetAtomMapNum() for a in mol_r.GetAtoms() if a.GetAtomMapNum() > 0)
-            & set(a.GetAtomMapNum() for a in mol_p.GetAtoms() if a.GetAtomMapNum() > 0)
-        )
-    )
+    # pick a random atom map shared by both as root
+    map_nums_r = set(a.GetAtomMapNum() for a in mol_r.GetAtoms() if a.GetAtomMapNum() > 0)
+    map_nums_p = set(a.GetAtomMapNum() for a in mol_p.GetAtoms() if a.GetAtomMapNum() > 0)
+    shared_map_nums = list(map_nums_r & map_nums_p)
 
-    if not shared_maps:
+    if not shared_map_nums:
         return r + ">>" + p  # nothing to align on
 
     rng = random_state or random
-    root_map = rng.choice(shared_maps)
+    root_map = rng.choice(shared_map_nums)
 
     # get the atom indices corresponding to that map on each side
     root_idx_r = next(a.GetIdx() for a in mol_r.GetAtoms() if a.GetAtomMapNum() == root_map)

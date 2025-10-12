@@ -4,7 +4,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from cgr_smiles.utils import ROOT_DIR
+from cgr_smiles import ROOT_DIR
 
 TEST_DATA_PATH = ROOT_DIR / "tests" / "data"
 
