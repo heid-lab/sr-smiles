@@ -1,7 +1,7 @@
 [project]
 name = "cgr-smiles"
 version = "0.1.0"
-description = "A Python library to convert reaction SMILES into CGR SMILES."
+description = "A Python library to convert reaction SMILES into CGR-SMILES."
 authors = [
     {name = "Charlotte Gerhaher", email = "charlotte.gerhaher@tuwien.ac.at"}
 ]
