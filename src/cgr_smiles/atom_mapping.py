@@ -12,6 +12,52 @@ from cgr_smiles.chem_utils.smiles_utils import ORGANIC_SUBSET, TokenType, _token
 from cgr_smiles.io.logger import logger
 
 
+class BaseMapper:
+    """Abstract base class defining a callable interface for reaction mappers."""
+
+    def __call__(self, rxn: str) -> str:
+        """Return a mapped reaction SMILES string."""
+        raise NotImplementedError
+
+
+class RxnMapperWrapper(BaseMapper):
+    """Wrapper around the Schwaller et al. RXNMapper model for atom mapping reactions."""
+
+    def __init__(self):
+        """Initialize the RXNMapper backend, raising an error if it's not installed."""
+        try:
+            from rxnmapper import RXNMapper
+        except ImportError:
+            raise ImportError("RxnMapper is not installed. Install with: `pip install rxnmapper`")
+
+        self.mapper = RXNMapper()
+
+    def __call__(self, rxn: str) -> str:
+        """Map atoms in a reaction string using RXNMapper."""
+        res = self.mapper.get_attention_guided_atom_maps([rxn], canonicalize_rxns=False)[0]
+        return res["mapped_rxn"]
+
+
+class GraphOverlayWrapper(BaseMapper):
+    """Mapper using a graph‑overlay (MCS) approach for atom mapping."""
+
+    def __init__(self):
+        """Initialize the graph overlay mapping function."""
+        self.mapping_func = maximum_common_substructure_mapping
+
+    def __call__(self, rxn: str) -> str:
+        """Map a reaction by aligning atoms via maximum common substructure overlap."""
+        return self.mapping_func(rxn)
+
+
+class IdentityMapper(BaseMapper):
+    """A no-op reaction mapper that returns the input reaction unchanged."""
+
+    def __call__(self, rxn: str) -> str:
+        """Return the input reaction SMILES without modification."""
+        return rxn
+
+
 def is_fully_atom_mapped(rxn_smiles: str) -> bool:
     """Check if a reaction SMILES string is fully atom-mapped.
 
@@ -41,7 +87,7 @@ def is_fully_atom_mapped(rxn_smiles: str) -> bool:
 
 
 def is_cgr_smiles_fully_atom_mapped(cgr_smiles: str) -> bool:
-    """Checks if a CGR SMILES string is fully atom-mapped.
+    """Checks if a CGR-SMILES string is fully atom-mapped.
 
     Checks according to the following definition:
     - All CGRTOKENs ({...|...}) must have both alternatives atom-mapped with
@@ -121,7 +167,7 @@ def add_atom_mapping(
 
 
 def add_atom_mapping_to_cgr(cgr: str) -> str:
-    """Add atom mapping numbers to a CGR SMILES string.
+    """Add atom mapping numbers to a CGR-SMILES string.
 
     Each atom gets a continuous unique index: 1, 2, 3, ...
     Atoms inside the same {...|...} group share one index.

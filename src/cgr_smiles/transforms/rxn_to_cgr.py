@@ -1,9 +1,10 @@
 import re
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Literal, Optional, Tuple, Union
 
 import pandas as pd
 from rdkit import Chem
 
+from cgr_smiles.atom_mapping import GraphOverlayWrapper, IdentityMapper, RxnMapperWrapper
 from cgr_smiles.chem_utils.list_utils import is_num_permutations_even, mask_nonshared_with_neg1
 from cgr_smiles.chem_utils.mol_utils import (
     get_atom_by_map_num,
@@ -31,7 +32,7 @@ from cgr_smiles.reaction_balancing import balance_reaction, is_balanced
 
 
 class RxnToCgr:
-    """Transform reaction SMILES into CGR SMILES.
+    """Transform reaction SMILES into CGR-SMILES.
 
     This class provides a callable interface for converting reaction SMILES into
     Condensed Graph of Reaction (CGR) SMILES. It supports single strings, lists
@@ -49,9 +50,11 @@ class RxnToCgr:
         rxn_col (Optional[str]): Column name in a DataFrame containing reaction SMILES.
         kekulize (bool): Convert aromatic atoms/bonds into explicit Kekulé notation.
             Defaults to False (keep aromatic notation).
-        keep_aromatic_bonds (bool): When `kekulize=True`, determines whether aromatic
-            bonds are explicitly flagged (True) or fully expanded into alternating
-            single/double bonds (False). Has no effect if `kekulize=False`.
+        keep_aromatic_bonds (bool):  If True and used together with
+            `kekulize=False`, aromatic bonds will be explicitly retained in the
+            Kekulé-expanded CGR (where supported). If False under `kekulize=False`,
+            aromaticity is fully converted into alternating single/double bonds.
+            Has no effect if `kekulize=True`. Defaults to True.
     """
 
     def __init__(
@@ -63,6 +66,7 @@ class RxnToCgr:
         rxn_col: Optional[str] = None,
         kekulize: bool = False,
         keep_aromatic_bonds: bool = True,
+        mapping_method: Literal["rxn_mapper", "graph_overlay"] = None,
     ) -> None:
         """Initializes the RXN to CGR transformation settings."""
         self.keep_atom_mapping = keep_atom_mapping
@@ -72,11 +76,51 @@ class RxnToCgr:
         self.rxn_col = rxn_col
         self.kekulize = kekulize
         self.keep_aromatic_bonds = keep_aromatic_bonds
+        self.mapping_method = mapping_method
+        self.init_mapper()
+
+    def init_mapper(self) -> None:
+        """Initialize the appropriate reaction mapper.
+
+        Creates and assigns a mapper instance to ``self.rxn_mapper`` based on
+        the selected mapping method stored in ``self.mapping_method``.
+
+        Supported methods:
+        * **"rxn_mapper"**: uses the external **RxnMapper** package.
+        * **"graph_overlay"**: uses the internal **GraphOverlayWrapper**.
+        * **"identity"**: applies no mapping and returns input reactions unchanged.
+
+        Args:
+            self: The class instance containing the ``mapping_method`` attribute.
+
+        Raises:
+            ValueError: If ``self.mapping_method`` is not one of the supported options.
+            ImportError: If ``"rxn_mapper"`` is selected but the **rxnmapper**
+                package is not installed.
+        """
+        valid_methods = {"rxn_mapper", "graph_overlay", None}
+        if self.mapping_method not in valid_methods:
+            raise ValueError(
+                f"Unsupported mapping method '{self.mapping_method}'. "
+                f"Choose from {sorted(valid_methods)}."
+            )
+
+        if self.mapping_method == "rxn_mapper":
+            try:
+                self.rxn_mapper = RxnMapperWrapper()
+            except ImportError:
+                raise ImportError("RxnMapper is not installed. Run: pip install rxnmapper")
+
+        elif self.mapping_method == "graph_overlay":
+            self.rxn_mapper = GraphOverlayWrapper()
+
+        else:
+            self.rxn_mapper = IdentityMapper()
 
     def __call__(
         self, data: Union[str, List[str], pd.Series, pd.DataFrame]
     ) -> Union[str, List[str], pd.Series, pd.DataFrame]:
-        """Applies the transformation of RXN to CGR SMILES.
+        """Applies the transformation of RXN to CGR-SMILES.
 
         Args:
             data (Union[str, List[str], pd.Series, pd.DataFrame]): Input reaction SMILES.
@@ -84,15 +128,16 @@ class RxnToCgr:
 
         Returns:
             Union[str, List[str], pd.Series, pd.DataFrame]: Output data of the same type
-            as `data`, with each entry converted into its CGR SMILES representation.
+            as `data`, with each entry converted into its CGR-SMILES representation.
 
         Raises:
             ValueError: If a DataFrame is provided but `self.rxn_col` is not set.
             TypeError: If the input type is not supported.
         """
         if isinstance(data, str):
+            mapped_rxn = self.rxn_mapper(data)
             return rxn_to_cgr(
-                data,
+                mapped_rxn,
                 keep_atom_mapping=self.keep_atom_mapping,
                 remove_brackets=self.remove_brackets,
                 remove_hydrogens=self.remove_hydrogens,
@@ -137,22 +182,22 @@ def rxn_to_cgr(
     remove_hydrogens: bool = False,
     balance_rxn: bool = False,
     kekulize: bool = False,
-    keep_aromatic_bonds: bool = True,
+    keep_aromatic_bonds: bool = False,
 ) -> str:
     """Converts a reaction SMILES string into a Condensed Graph of Reaction (CGR) SMILES.
 
-    A CGR SMILES encodes the transformation between reactant and product molecules
+    A CGR-SMILES encodes the transformation between reactant and product molecules
     as a single, compact string representation, where atoms and bonds are annotated to
     show differences in atom types, bond orders, and stereochemistry.
 
     Args:
         rxn_smi (str): A reaction SMILES string in the format "reactant>>product".
         keep_atom_mapping (bool): If True, atom map numbers will be removed in the
-            output CGR SMILES. Otherwise they will be retained (default).
+            output CGR-SMILES. Otherwise they will be retained (default).
         remove_brackets (bool): If True, redundant square brackets will be removed
-            in the output CGR SMILES. Otherwise they will be kept (default).
+            in the output CGR-SMILES. Otherwise they will be kept (default).
         remove_hydrogens (bool): If True, explicit hydrogens will be removed in the
-            output CGR SMILES. Otherwise they will be kept (default).
+            output CGR-SMILES. Otherwise they will be kept (default).
         balance_rxn (bool, optional): If True, attempts to balance the reaction
             before generating the CGR. Defaults to False.
         kekulize (bool, optional): If True, converts all aromatic atoms/bonds into a
@@ -165,7 +210,7 @@ def rxn_to_cgr(
             Has no effect if `kekulize=True`. Defaults to True.
 
     Returns:
-        str: A CGR SMILES string representing the reaction as a single molecule
+        str: A CGR-SMILES string representing the reaction as a single molecule
         with annotations of changes using `{reac|prod}` syntax.
 
     Notes:
@@ -179,7 +224,7 @@ def rxn_to_cgr(
         >>> rxn_to_cgr(rxn_smiles)
         "[C:1]1([H:3])([H:4])([H:5]){-|~}[H:6]{~|-}[H:7]{-|~}[Cl:2]{~|-}1"
 
-        # In the resulting CGR SMILES, the `{reac|prod}` notation encodes how atoms and bonds
+        # In the resulting CGR-SMILES, the `{reac|prod}` notation encodes how atoms and bonds
         # change from reactants to products. For example, '[H:6]{~|-}[H:7]' means that while there
         # was no bond between these two hydrogen atoms in the reactants, a single bond has been
         # formed between them in the product molecule.
@@ -192,7 +237,7 @@ def rxn_to_cgr(
             else:
                 raise ValueError(
                     "The given rxn is not balanced. "
-                    "Set `balance_rxn=True` to apply automatic balancing before CGR transformation."
+                    "Set `balance_rxn=True` to apply automatic balancing before CGR transformation"
                 )
 
         # check if rxn_smi is fully atom mapped
@@ -433,16 +478,16 @@ def build_cgr_smiles(
     replace_dict_atoms: Dict[int, str],
     replace_dict_bonds: Dict[Tuple[int, int], str],
 ) -> str:
-    """Converts a CGR SMILES into a GR SMILES with explicit atom and bond replacements.
+    """Converts a CGR-SMILES into a GR SMILES with explicit atom and bond replacements.
 
     Args:
-        smi_cgr_scaffold (str): Scaffold of the CGR SMILES.
+        smi_cgr_scaffold (str): Scaffold of the CGR-SMILES.
         replace_dict_atoms (dict[int, str]): Map number → replacement SMARTS for atoms.
         replace_dict_bonds (dict[tuple[int, int], str]):
             (begin_map, end_map) → replacement SMARTS for bonds.
 
     Returns:
-        str: The constructed CGR SMILES string.
+        str: The constructed CGR-SMILES string.
     """
     smiles = ""
     anchor = None

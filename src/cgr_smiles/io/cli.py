@@ -17,8 +17,8 @@ console = Console()
 class Direction(Enum):
     """Enumeration for the transformation directions."""
 
-    RXN2CGR = "Reaction SMILES ➡️ CGR SMILES"
-    CGR2RXN = "CGR SMILES ➡️ Reaction SMILES"
+    RXN2CGR = "Reaction SMILES ➡️ CGR-SMILES"
+    CGR2RXN = "CGR-SMILES ➡️ Reaction SMILES"
 
 
 def print_banner(
@@ -32,7 +32,7 @@ def print_banner(
     banner_text = Text()
 
     banner_text.append("👋 Welcome to ", style="bold green")
-    banner_text.append("CGR SMILES\n", style="bold cyan underline")
+    banner_text.append("CGR-SMILES\n", style="bold cyan underline")
 
     banner_text.append("Transforming ", style="yellow")
     banner_text.append(f"{direction.value}", style="bold yellow")
@@ -49,7 +49,7 @@ def print_banner(
     console.print(
         Panel(
             Align.center(banner_text),
-            title=f"[bold cyan]🚀 CGR SMILES Converter v{cgr_smiles.__version__}[/bold cyan]",
+            title=f"[bold cyan]🚀 CGR-SMILES Converter v{cgr_smiles.__version__}[/bold cyan]",
             border_style="cyan",
             padding=(1, 4),
             expand=False,
@@ -68,15 +68,21 @@ def reverse_reaction_smiles(rxn_smiles: str) -> str:
 
 
 def main_rxn2cgr():
-    """CLI entry point: convert reaction SMILES to CGR SMILES in a CSV."""
-    parser = argparse.ArgumentParser(description="Convert reaction SMILES to CGR SMILES")
+    """CLI entry point: convert reaction SMILES to CGR-SMILES in a CSV."""
+    parser = argparse.ArgumentParser(description="Convert reaction SMILES to CGR-SMILES")
     parser.add_argument("csv_file", help="Path to input CSV file")
     parser.add_argument("-o", "--output", help="Path to output CSV file (default: overwrite input)")
     parser.add_argument("--rxn-col", default="rxn_smiles", help="Column name with reaction SMILES")
-    parser.add_argument("--cgr-col", default="cgr_smiles", help="Name of new column for CGR SMILES")
+    parser.add_argument("--cgr-col", default="cgr_smiles", help="Name of new column for CGR-SMILES")
     parser.add_argument("--keep-atom-mapping", action="store_true", help="Preserve atom mapping")
     parser.add_argument("--remove-brackets", action="store_true", help="Remove brackets")
     parser.add_argument("--remove-hydrogens", action="store_true", help="Remove explicit hydrogens")
+    parser.add_argument(
+        "--mapping-method",
+        default=None,
+        choices=["rxn_mapper", "graph_overlay", "identity"],
+        help="Select the atom‑mapping method to use. ",
+    )
     parser.add_argument("--balance-rxn", action="store_true", help="Balance the given reaction")
     parser.add_argument("--product-based", action="store_true", help="Balance the given reaction")
     parser.add_argument("--kekulize", action="store_true", help="Use the SMILES kekule form")
@@ -130,11 +136,11 @@ def main_rxn2cgr():
 
 
 def main_cgr2rxn():
-    """CLI entry point: convert CGR SMILES to reaction SMILES in a CSV."""
-    parser = argparse.ArgumentParser(description="Convert CGR SMILES to reaction SMILES")
+    """CLI entry point: convert CGR-SMILES to reaction SMILES in a CSV."""
+    parser = argparse.ArgumentParser(description="Convert CGR-SMILES to reaction SMILES")
     parser.add_argument("csv_file", help="Path to input CSV file")
     parser.add_argument("-o", "--output", help="Path to output CSV file (default: overwrite input)")
-    parser.add_argument("--cgr-col", default="cgr_smiles", help="Column name with CGR SMILES")
+    parser.add_argument("--cgr-col", default="cgr_smiles", help="Column name with CGR-SMILES")
     parser.add_argument("--rxn-col", default="rxn_smiles", help="Name of new column for reaction SMILES")
 
     args = parser.parse_args()
