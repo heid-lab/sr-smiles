@@ -13,7 +13,7 @@
 
 </div> -->
 
-[Installation](#installation) | [Usage](#usage) | [Contributing](#contributing) | [Citation](#citation)
+[Overview](#overview) | [Installation](#installation) | [Usage](#usage) | [Contributing](#contributing) | [Citation](#citation) | [References](#references)
 
 </div>
 
@@ -26,7 +26,7 @@ Note: This repository is not yet public and not yet on PyPI, hence the installat
 
 ---
 
-## Introduction & Overview
+## Overview
 
 The CGR‑SMILES is inspired by the Condensed Graph of Reaction (CGR) representation,
 a concept originating from graph‑based cheminformatics [[1]](#references).
@@ -52,7 +52,9 @@ Let's take a look at an example:
 
 ---
 
-## Installation [WIP]
+## Installation
+
+[WIP]
 
 ```bash
 pip install cgr-smiles
@@ -250,7 +252,7 @@ For development installation and guidelines, see [CONTRIBUTE.md](CONTRIBUTE.md).
 
 ---
 
-### References
+## References
 [1] Heid, E.; Green, W. H. *Machine Learning of Reaction Properties via Learned Representations of the Condensed Graph of Reaction.*
    *J. Chem. Inf. Model.* **2022**, 62 (9), 2101–2110.
    DOI: [10.1021/acs.jcim.1c00975](https://doi.org/10.1021/acs.jcim.1c00975)
