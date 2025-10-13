@@ -243,8 +243,12 @@ cgr2rxn output_cgr.csv \                # required (input CSV)
 
 ## Contributing
 
-We welcome contributions!
+[WIP]
+
+🤝 We welcome contributions!
 For development installation and guidelines, see [CONTRIBUTE.md](CONTRIBUTE.md).
+
+While the transformations have been tested across various datasets and scenarios, edge cases can always arise. If you encounter an issue or discover a case that doesn’t behave as expected, please open a pull request or issue, and we’ll be happy to investigate and get back to you as soon as possible 🦠✨🚀
 
 ---
 
