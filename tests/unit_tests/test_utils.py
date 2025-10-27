@@ -60,11 +60,11 @@ def complex_smiles() -> Tuple[Chem.Mol, Chem.Mol]:
 #     assert rxn_wo_am == "O=C([H])C#C[H]>>[H]C#C[H].[O+]#[C-]"
 
 
-# def test_remove_redundant_square_brackets_cgr_smiles():
-#     """Test removal of square brackets from a CGR smiles."""
-#     cgr_smiles = "{[O]|[O+]}{=|#}{[C]|[C-]}1{-|~}[H]{~|-}[C]{-|~}1#[C][H]"
-#     cgr_wo_am = remove_redundant_square_brackets(cgr_smiles)
-#     assert cgr_wo_am == "{O|[O+]}{=|#}{C|[C-]}1{-|~}[H]{~|-}C{-|~}1#C[H]"
+# def test_remove_redundant_square_brackets_sr_smiles():
+#     """Test removal of square brackets from a SR smiles."""
+#     sr_smiles = "{[O]|[O+]}{=|#}{[C]|[C-]}1{-|~}[H]{~|-}[C]{-|~}1#[C][H]"
+#     sr_wo_am = remove_redundant_square_brackets(sr_smiles)
+#     assert sr_wo_am == "{O|[O+]}{=|#}{C|[C-]}1{-|~}[H]{~|-}C{-|~}1#C[H]"
 
 
 # @pytest.mark.parametrize(

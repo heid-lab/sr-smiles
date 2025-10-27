@@ -1,6 +1,6 @@
 import pytest
 
-from cgr_smiles.chem_utils.list_utils import (
+from sr_smiles.chem_utils.list_utils import (
     common_elements_preserving_order,
     is_num_permutations_even,
     mask_nonshared_with_neg1,

@@ -3,7 +3,7 @@ from typing import Dict, List, Optional, Tuple
 import rdkit
 from rdkit import Chem
 
-from cgr_smiles.io.logger import logger
+from sr_smiles.io.logger import logger
 
 
 def make_mol(smi: str, sanitize: bool = True, kekulize: bool = True) -> Chem.Mol:

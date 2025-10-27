@@ -5,10 +5,10 @@ import pytest
 from conftest import equivalent_reactions
 from rdkit import Chem
 
-from cgr_smiles import ROOT_DIR
-from cgr_smiles.chem_utils.smiles_utils import canonicalize
-from cgr_smiles.transforms.cgr_to_rxn import CgrToRxn, cgr_to_rxn
-from cgr_smiles.transforms.rxn_to_cgr import RxnToCgr, rxn_to_cgr
+from sr_smiles import ROOT_DIR
+from sr_smiles.chem_utils.smiles_utils import canonicalize
+from sr_smiles.transforms.rxn_to_sr import RxnToSr, rxn_to_sr
+from sr_smiles.transforms.sr_to_rxn import SrToRxn, sr_to_rxn
 
 TEST_DATA_PATH = ROOT_DIR / "tests" / "data"
 
@@ -67,7 +67,7 @@ def initialize_failures_csv_file():
                 "e2e_rxn_smiles",
                 "can_rxn_smiles",
                 "can_e2e_rxn_smiles",
-                "cgr_smiles",
+                "sr_smiles",
             ]
         )
 
@@ -80,32 +80,30 @@ test_cases, ids = generate_individual_tests()
 @pytest.mark.e2e
 @pytest.mark.parametrize("file_path, idx, rxn_smiles, rxn_col", test_cases, ids=ids)
 def test_roundtrip_per_sample(file_path, idx, rxn_smiles, rxn_col):
-    """Test single sample roundtrip (RXN -> CGR -> RXN)."""
+    """Test single sample roundtrip (RXN -> SR -> RXN)."""
     rxn_can = canonicalize(rxn_smiles)
-    cgr = rxn_to_cgr(rxn_smiles, keep_atom_mapping=True)
+    sr = rxn_to_sr(rxn_smiles, keep_atom_mapping=True)
 
-    res = cgr_to_rxn(cgr)
+    res = sr_to_rxn(sr)
     res_can = canonicalize(res)
 
     if res_can != rxn_can:
         # Log the failing case to the CSV file
         with open(E2E_FAILURES_CSV, mode="a", newline="") as file:
             writer = csv.writer(file)
-            writer.writerow([file_path, rxn_smiles, res, rxn_can, res_can, cgr])  # Write the failing case
+            writer.writerow([file_path, rxn_smiles, res, rxn_can, res_can, sr])  # Write the failing case
 
-    assert (
-        res_can == rxn_can
-    ), f"Mismatch at {file_path}:{idx}, cgr={cgr}, rxn_can={rxn_can}, res_can={res_can}"
+    assert res_can == rxn_can, f"Mismatch at {file_path}:{idx}, sr={sr}, rxn_can={rxn_can}, res_can={res_can}"
 
 
 @pytest.mark.e2e
 @pytest.mark.parametrize("file_path, idx, rxn_smiles, rxn_col", test_cases, ids=ids)
-def test_roundtrip_per_sample_with_unmapped_cgr_smiles(file_path, idx, rxn_smiles, rxn_col):
-    """Test single sample roundtrip (RXN -> CGR -> RXN)."""
+def test_roundtrip_per_sample_with_unmapped_sr_smiles(file_path, idx, rxn_smiles, rxn_col):
+    """Test single sample roundtrip (RXN -> SR -> RXN)."""
     rxn_can = canonicalize(rxn_smiles)
-    cgr = rxn_to_cgr(rxn_smiles, keep_atom_mapping=False)
+    sr = rxn_to_sr(rxn_smiles, keep_atom_mapping=False)
 
-    res = cgr_to_rxn(cgr, add_atom_mapping=True)
+    res = sr_to_rxn(sr, add_atom_mapping=True)
     res_can = canonicalize(res)
 
     assert equivalent_reactions(rxn_smiles, res)
@@ -144,23 +142,23 @@ subset_test_cases, subset_ids = generate_individual_tests(max_samples=10)
 
 @pytest.fixture(scope="module")
 def transform_back():
-    """Single backward transformer instance (CGR → Rxn)."""
-    return CgrToRxn()
+    """Single backward transformer instance (SR → Rxn)."""
+    return SrToRxn()
 
 
 @pytest.fixture(params=["rxn_mapper", "graph_overlay", None], ids=str)
 def forward_transformer(request):
-    """Forward RxnToCgr transformer, parameterized by mapping method."""
-    return RxnToCgr(mapping_method=request.param, keep_atom_mapping=True)
+    """Forward RxnToSr transformer, parameterized by mapping method."""
+    return RxnToSr(mapping_method=request.param, keep_atom_mapping=True)
 
 
 @pytest.mark.parametrize("file_path, idx, rxn_smiles, rxn_col", subset_test_cases, ids=subset_ids)
-def test_RxnToCgr_roundtrip_with_mapping_method(
+def test_RxnToSr_roundtrip_with_mapping_method(
     forward_transformer, transform_back, file_path, idx, rxn_smiles, rxn_col
 ):
-    """Ensure round-trip Rxn → CGR → Rxn equivalence across mapping backends."""
-    cgr = forward_transformer(rxn_smiles)
-    rxn_back = transform_back(cgr)
+    """Ensure round-trip Rxn → SR → Rxn equivalence across mapping backends."""
+    sr = forward_transformer(rxn_smiles)
+    rxn_back = transform_back(sr)
 
     assert are_equivalent_rxn_smiles(rxn_smiles, rxn_back), (
         f"Round-trip mismatch for sample {file_path}:{idx} "

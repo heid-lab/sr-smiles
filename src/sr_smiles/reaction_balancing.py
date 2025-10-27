@@ -3,8 +3,8 @@ from collections import Counter
 from rdkit import Chem
 from rdkit.Chem import rdchem
 
-from cgr_smiles.chem_utils.mol_utils import make_mol
-from cgr_smiles.chem_utils.smiles_utils import get_list_of_atom_map_numbers
+from sr_smiles.chem_utils.mol_utils import make_mol
+from sr_smiles.chem_utils.smiles_utils import get_list_of_atom_map_numbers
 
 
 def get_element_counts(smiles: str) -> Counter:

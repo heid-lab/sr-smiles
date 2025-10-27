@@ -4,22 +4,22 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from cgr_smiles import ROOT_DIR
+from sr_smiles import ROOT_DIR
 
 TEST_DATA_PATH = ROOT_DIR / "tests" / "data"
 
 
 @pytest.mark.e2e
-def test_cli_rxn2cgr_and_cgr2rxn(tmp_path: Path):
-    """Test the end-to-end CLI workflow from reaction to CGR and back."""
+def test_cli_rxn2sr_and_sr2rxn(tmp_path: Path):
+    """Test the end-to-end CLI workflow from reaction to SR and back."""
     input_file = TEST_DATA_PATH / "rdb7" / "test.csv"
     forward_file = tmp_path / "cli_test_cases_forward.csv"
     backward_file = tmp_path / "cli_test_cases_backward.csv"
 
-    # run forward transformation (rxn -> cgr)
+    # run forward transformation (rxn -> sr)
     subprocess.run(
         [
-            "rxn2cgr",
+            "rxn2sr",
             str(input_file),
             "-o",
             str(forward_file),
@@ -31,17 +31,17 @@ def test_cli_rxn2cgr_and_cgr2rxn(tmp_path: Path):
 
     # check forward output
     df_forward = pd.read_csv(forward_file)
-    assert "cgr_smiles" in df_forward.columns
-    assert not df_forward["cgr_smiles"].isnull().any()
+    assert "sr_smiles" in df_forward.columns
+    assert not df_forward["sr_smiles"].isnull().any()
 
-    # run backward transformation (cgr -> rxn)
+    # run backward transformation (sr -> rxn)
     subprocess.run(
         [
-            "cgr2rxn",
+            "sr2rxn",
             str(forward_file),
             "-o",
             str(backward_file),
-            "--cgr-col=cgr_smiles",
+            "--sr-col=sr_smiles",
         ],
         check=True,
     )

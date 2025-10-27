@@ -3,7 +3,7 @@ from typing import List, Tuple
 import pytest
 from rdkit import Chem
 
-from cgr_smiles.chem_utils.smiles_utils import (
+from sr_smiles.chem_utils.smiles_utils import (
     TokenType,
     _tokenize,
     canonicalize,
@@ -34,7 +34,7 @@ def complex_smiles() -> Tuple[Chem.Mol, Chem.Mol]:
 
 
 @pytest.mark.parametrize(
-    "smi_cgr, expected",
+    "smi_sr, expected",
     [
         # basic redundant bracket removal
         ("[C][C]", "CC"),
@@ -57,14 +57,14 @@ def complex_smiles() -> Tuple[Chem.Mol, Chem.Mol]:
         ("C{O|O}N", "CON"),
     ],
 )
-def test_remove_redundant_brackets_and_hydrogens(smi_cgr, expected):
+def test_remove_redundant_brackets_and_hydrogens(smi_sr, expected):
     """Check core functionality for standard cases and hydrogens simplifications."""
-    result = remove_redundant_brackets_and_hydrogens(smi_cgr)
+    result = remove_redundant_brackets_and_hydrogens(smi_sr)
     assert result == expected
 
 
 @pytest.mark.parametrize(
-    "smi_cgr, expected",
+    "smi_sr, expected",
     [
         # basic redundant bracket removal
         ("[C][C]", "CC"),
@@ -86,9 +86,9 @@ def test_remove_redundant_brackets_and_hydrogens(smi_cgr, expected):
         ("C{O|O}N", "CON"),
     ],
 )
-def test_remove_redundant_brackets(smi_cgr, expected):
+def test_remove_redundant_brackets(smi_sr, expected):
     """Check core functionality for standard cases and hydrogens simplifications."""
-    result = remove_redundant_brackets(smi_cgr)
+    result = remove_redundant_brackets(smi_sr)
     assert result == expected
 
 
@@ -112,8 +112,8 @@ def test_remove_atom_mapping_rxn_smiles():
     assert rxn_wo_am == "[CH3][C](=[O])[O].[CH3][NH2]>>[CH3][C](=[O])[NH][CH3].[OH2]"
 
 
-def test_remove_atom_mapping_cgr_smiles():
-    """Test removal of atom mapping from a CGR smiles."""
+def test_remove_atom_mapping_sr_smiles():
+    """Test removal of atom mapping from an SR smiles."""
     rxn_smiles = "{[O:1]|[O+:1]}{=|#}{[C:2]|[C-:2]}1{-|~}[H:5]{~|-}[C:3]{-|~}1#[C:4][H:6]"
     rxn_wo_am = remove_atom_mapping(rxn_smiles)
     assert rxn_wo_am == "{[O]|[O+]}{=|#}{[C]|[C-]}1{-|~}[H]{~|-}[C]{-|~}1#[C][H]"
@@ -453,8 +453,8 @@ def test_is_kekule_invariant_to_extra_annotations():
     assert is_kekule(smi)
 
 
-# def test_get_list_of_atom_map_numbers_from_cgr_smiles():
+# def test_get_list_of_atom_map_numbers_from_sr_smiles():
 #     """Check that all atom map numbers are extracted in SMILES traversal order."""
-#     cgr = "{[C:4]|[CH:4]}([H:9])#[C:3][C@@:2]1([H:8]){[N:6]|[N+:6]}{=|-}[C:5]1[O:1][H:7]"
-#     map_nums = get_list_of_atom_map_numbers_from_cgr_smiles(cgr)
+#     sr = "{[C:4]|[CH:4]}([H:9])#[C:3][C@@:2]1([H:8]){[N:6]|[N+:6]}{=|-}[C:5]1[O:1][H:7]"
+#     map_nums = get_list_of_atom_map_numbers_from_sr_smiles(sr)
 #     assert map_nums == [4, 9, 3, 2, 8, 6, 5, 1, 7]

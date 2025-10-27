@@ -8,8 +8,8 @@ from rich.panel import Panel
 from rich.text import Text
 from tqdm import tqdm
 
-import cgr_smiles
-from cgr_smiles import CgrToRxn, RxnToCgr, logger, set_verbose
+import sr_smiles
+from sr_smiles import RxnToSr, SrToRxn, logger, set_verbose
 
 console = Console()
 
@@ -17,8 +17,8 @@ console = Console()
 class Direction(Enum):
     """Enumeration for the transformation directions."""
 
-    RXN2CGR = "Reaction SMILES ➡️ CGR-SMILES"
-    CGR2RXN = "CGR-SMILES ➡️ Reaction SMILES"
+    RXN2SR = "Reaction SMILES ➡️ SR-SMILES"
+    SR2RXN = "SR-SMILES ➡️ Reaction SMILES"
 
 
 def print_banner(
@@ -32,7 +32,7 @@ def print_banner(
     banner_text = Text()
 
     banner_text.append("👋 Welcome to ", style="bold green")
-    banner_text.append("CGR-SMILES\n", style="bold cyan underline")
+    banner_text.append("SR-SMILES\n", style="bold cyan underline")
 
     banner_text.append("Transforming ", style="yellow")
     banner_text.append(f"{direction.value}", style="bold yellow")
@@ -49,7 +49,7 @@ def print_banner(
     console.print(
         Panel(
             Align.center(banner_text),
-            title=f"[bold cyan]🚀 CGR-SMILES Converter v{cgr_smiles.__version__}[/bold cyan]",
+            title=f"[bold cyan]🚀 SR-SMILES Converter v{sr_smiles.__version__}[/bold cyan]",
             border_style="cyan",
             padding=(1, 4),
             expand=False,
@@ -67,13 +67,13 @@ def reverse_reaction_smiles(rxn_smiles: str) -> str:
         return rxn_smiles
 
 
-def main_rxn2cgr():
-    """CLI entry point: convert reaction SMILES to CGR-SMILES in a CSV."""
-    parser = argparse.ArgumentParser(description="Convert reaction SMILES to CGR-SMILES")
+def main_rxn2sr():
+    """CLI entry point: convert reaction SMILES to SR-SMILES in a CSV."""
+    parser = argparse.ArgumentParser(description="Convert reaction SMILES to SR-SMILES")
     parser.add_argument("csv_file", help="Path to input CSV file")
     parser.add_argument("-o", "--output", help="Path to output CSV file (default: overwrite input)")
     parser.add_argument("--rxn-col", default="rxn_smiles", help="Column name with reaction SMILES")
-    parser.add_argument("--cgr-col", default="cgr_smiles", help="Name of new column for CGR-SMILES")
+    parser.add_argument("--sr-col", default="sr_smiles", help="Name of new column for SR-SMILES")
     parser.add_argument("--keep-atom-mapping", action="store_true", help="Preserve atom mapping")
     parser.add_argument("--remove-brackets", action="store_true", help="Remove brackets")
     parser.add_argument("--remove-hydrogens", action="store_true", help="Remove explicit hydrogens")
@@ -95,9 +95,9 @@ def main_rxn2cgr():
     args = parser.parse_args()
 
     print_banner(
-        Direction.RXN2CGR,
+        Direction.RXN2SR,
         input_col=args.rxn_col,
-        output_col=args.cgr_col,
+        output_col=args.sr_col,
         input_file=args.csv_file,
         output_file=args.output,
     )
@@ -107,8 +107,8 @@ def main_rxn2cgr():
     df = pd.read_csv(args.csv_file)
     logger.info(f"✅ Loaded {len(df)} rows.")
 
-    logger.info(f"🔄 Transforming column '{args.rxn_col}' → '{args.cgr_col}' ...")
-    transform = RxnToCgr(
+    logger.info(f"🔄 Transforming column '{args.rxn_col}' → '{args.sr_col}' ...")
+    transform = RxnToSr(
         keep_atom_mapping=args.keep_atom_mapping,
         remove_brackets=args.remove_brackets,
         remove_hydrogens=args.remove_hydrogens,
@@ -123,31 +123,31 @@ def main_rxn2cgr():
         logger.info("Reverse reactions for product-based transformation")
 
         df[f"{args.rxn_col}_reversed"] = df[args.rxn_col].progress_apply(reverse_reaction_smiles)
-        df[args.cgr_col] = df[f"{args.rxn_col}_reversed"].progress_apply(transform)
+        df[args.sr_col] = df[f"{args.rxn_col}_reversed"].progress_apply(transform)
     else:
-        df[args.cgr_col] = df[args.rxn_col].progress_apply(transform)
+        df[args.sr_col] = df[args.rxn_col].progress_apply(transform)
 
     logger.info("✅ Transformation complete.")
 
     output_path = args.output or args.csv_file
     logger.info(f"💾 Writing results to: {output_path}")
     df.to_csv(output_path, index=False)
-    logger.info(f"🎉 Done! Wrote {len(df)} rows with new column '{args.cgr_col}'")
+    logger.info(f"🎉 Done! Wrote {len(df)} rows with new column '{args.sr_col}'")
 
 
-def main_cgr2rxn():
-    """CLI entry point: convert CGR-SMILES to reaction SMILES in a CSV."""
-    parser = argparse.ArgumentParser(description="Convert CGR-SMILES to reaction SMILES")
+def main_sr2rxn():
+    """CLI entry point: convert SR-SMILES to reaction SMILES in a CSV."""
+    parser = argparse.ArgumentParser(description="Convert SR-SMILES to reaction SMILES")
     parser.add_argument("csv_file", help="Path to input CSV file")
     parser.add_argument("-o", "--output", help="Path to output CSV file (default: overwrite input)")
-    parser.add_argument("--cgr-col", default="cgr_smiles", help="Column name with CGR-SMILES")
+    parser.add_argument("--sr-col", default="sr_smiles", help="Column name with SR-SMILES")
     parser.add_argument("--rxn-col", default="rxn_smiles", help="Name of new column for reaction SMILES")
 
     args = parser.parse_args()
 
     print_banner(
-        Direction.CGR2RXN,
-        input_col=args.cgr_col,
+        Direction.SR2RXN,
+        input_col=args.sr_col,
         output_col=args.rxn_col,
         input_file=args.csv_file,
         output_file=args.output,
@@ -159,11 +159,11 @@ def main_cgr2rxn():
     df = pd.read_csv(args.csv_file)
     logger.info(f"✅ Loaded {len(df)} rows.")
 
-    logger.info(f"🔄 Transforming column '{args.cgr_col}' → '{args.rxn_col}' ...")
-    transform = CgrToRxn(cgr_col=args.cgr_col)
+    logger.info(f"🔄 Transforming column '{args.sr_col}' → '{args.rxn_col}' ...")
+    transform = SrToRxn(sr_col=args.sr_col)
 
     tqdm.pandas()
-    df[args.rxn_col] = df[args.cgr_col].progress_apply(transform)
+    df[args.rxn_col] = df[args.sr_col].progress_apply(transform)
     logger.info("✅ Transformation complete.")
 
     output_path = args.output or args.csv_file

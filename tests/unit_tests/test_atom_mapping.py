@@ -1,11 +1,11 @@
 import pytest
 from conftest import equivalent_reactions
 
-from cgr_smiles.atom_mapping import (
+from sr_smiles.atom_mapping import (
     add_atom_mapping,
-    add_atom_mapping_to_cgr,
-    is_cgr_smiles_fully_atom_mapped,
+    add_atom_mapping_to_sr,
     is_fully_atom_mapped,
+    is_sr_smiles_fully_atom_mapped,
 )
 
 
@@ -40,9 +40,9 @@ def test_is_fully_atom_mapped(rxn_smiles, expected):
         ("CC{[Cl:1]|[Br:1]}", False),  # no mapping at all
     ],
 )
-def test_is_cgr_smiles_fully_atom_mapped(rxn_smiles, expected):
-    """Test that `is_cgr_smiles_fully_atom_mapped` correctly identifies fully mapped reactions."""
-    assert is_cgr_smiles_fully_atom_mapped(rxn_smiles) == expected
+def test_is_sr_smiles_fully_atom_mapped(rxn_smiles, expected):
+    """Test that `is_sr_smiles_fully_atom_mapped` correctly identifies fully mapped reactions."""
+    assert is_sr_smiles_fully_atom_mapped(rxn_smiles) == expected
 
 
 REACTION_CASES = [
@@ -84,7 +84,7 @@ def test_add_atom_mapping_with_rxn_mapper(rxn, expected):
 
 
 @pytest.mark.parametrize(
-    "cgr, expected",
+    "sr, expected",
     [
         ("C=O", "[C:1]=[O:2]"),
         ("{C|[C-]}", "{[C:1]|[C-:1]}"),
@@ -92,7 +92,7 @@ def test_add_atom_mapping_with_rxn_mapper(rxn, expected):
         ("[C:2]O{-|=}{[CH3]|[CH2]}", "[C:2][O:1]{-|=}{[CH3:3]|[CH2:3]}"),
     ],
 )
-def test_add_atom_mapping_to_cgr(cgr, expected):
-    """Ensure add_atom_mapping_to_cgr assigns unique continuous map numbers and groups share indices."""
-    result = add_atom_mapping_to_cgr(cgr)
-    assert result == expected, f"For '{cgr}': expected '{expected}', got '{result}'"
+def test_add_atom_mapping_to_sr(sr, expected):
+    """Ensure add_atom_mapping_to_sr assigns unique continuous map numbers and groups share indices."""
+    result = add_atom_mapping_to_sr(sr)
+    assert result == expected, f"For '{sr}': expected '{expected}', got '{result}'"

@@ -3,7 +3,7 @@ from typing import Optional
 
 from rdkit import Chem
 
-from cgr_smiles.chem_utils.mol_utils import make_mol
+from sr_smiles.chem_utils.mol_utils import make_mol
 
 
 def augment_atom_traversal_order(

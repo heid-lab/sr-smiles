@@ -4,12 +4,12 @@ from typing import Literal
 from rdkit import Chem
 from rdkit.Chem import rdFMCS
 
-from cgr_smiles.chem_utils.mol_utils import (
+from sr_smiles.chem_utils.mol_utils import (
     get_atom_map_nums_of_mol,
     make_mol,
 )
-from cgr_smiles.chem_utils.smiles_utils import ORGANIC_SUBSET, TokenType, _tokenize
-from cgr_smiles.io.logger import logger
+from sr_smiles.chem_utils.smiles_utils import ORGANIC_SUBSET, TokenType, _tokenize
+from sr_smiles.io.logger import logger
 
 
 class BaseMapper:
@@ -86,17 +86,17 @@ def is_fully_atom_mapped(rxn_smiles: str) -> bool:
     return set(reac_map_nums) == set(prod_map_nums)
 
 
-def is_cgr_smiles_fully_atom_mapped(cgr_smiles: str) -> bool:
-    """Checks if a CGR-SMILES string is fully atom-mapped.
+def is_sr_smiles_fully_atom_mapped(sr_smiles: str) -> bool:
+    """Checks if an SR-SMILES string is fully atom-mapped.
 
     Checks according to the following definition:
-    - All CGRTOKENs ({...|...}) must have both alternatives atom-mapped with
+    - All SRTOKENs ({...|...}) must have both alternatives atom-mapped with
       the SAME map number.
     - All TOKENs ([...]) must be atom-mapped.
     """
     atom_map_pattern = re.compile(r":\d+")
 
-    for tok_type, _, tok in _tokenize(cgr_smiles):
+    for tok_type, _, tok in _tokenize(sr_smiles):
         if tok_type == TokenType.ATOM:
             if not atom_map_pattern.search(tok):
                 return False
@@ -166,8 +166,8 @@ def add_atom_mapping(
         raise ValueError(f"Unknown method: {method}")
 
 
-def add_atom_mapping_to_cgr(cgr: str) -> str:
-    """Add atom mapping numbers to a CGR-SMILES string.
+def add_atom_mapping_to_sr(sr: str) -> str:
+    """Add atom mapping numbers to a SR-SMILES string.
 
     Each atom gets a continuous unique index: 1, 2, 3, ...
     Atoms inside the same {...|...} group share one index.
@@ -188,14 +188,14 @@ def add_atom_mapping_to_cgr(cgr: str) -> str:
 
     preexisting_map_nums = set()
 
-    while i < len(cgr):
+    while i < len(sr):
         # before mapping any new atom, make sure counter is unused
         while mapping_counter in preexisting_map_nums:
             mapping_counter += 1
 
-        if cgr[i] == "{":  # handle group {...|...}
-            j = cgr.find("}", i)
-            group_content = cgr[i + 1 : j]
+        if sr[i] == "{":  # handle group {...|...}
+            j = sr.find("}", i)
+            group_content = sr[i + 1 : j]
 
             # recursively map inside group using same index
             group_mapped = atom_pattern.sub(
@@ -206,7 +206,7 @@ def add_atom_mapping_to_cgr(cgr: str) -> str:
             out.append("{" + group_mapped + "}")
             i = j + 1
         else:
-            m = atom_pattern.match(cgr, i)
+            m = atom_pattern.match(sr, i)
             # check if we have an atom token
             if m:
                 token = m.group()
@@ -242,7 +242,7 @@ def add_atom_mapping_to_cgr(cgr: str) -> str:
 
                 i = m.end()
             else:
-                out.append(cgr[i])
+                out.append(sr[i])
                 i += 1
     return "".join(out)
 

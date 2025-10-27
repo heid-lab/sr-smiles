@@ -3,7 +3,7 @@ from typing import Tuple
 import pytest
 from rdkit import Chem
 
-from cgr_smiles.chem_utils.mol_utils import (
+from sr_smiles.chem_utils.mol_utils import (
     get_atom_by_map_num,
     get_atom_map_nums_of_mol,
     get_reac_to_prod_mapping,

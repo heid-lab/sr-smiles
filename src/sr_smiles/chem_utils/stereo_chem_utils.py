@@ -3,8 +3,8 @@ from typing import Dict, List, Tuple
 
 from rdkit import Chem
 
-from cgr_smiles.chem_utils.list_utils import common_elements_preserving_order, is_num_permutations_even
-from cgr_smiles.chem_utils.smiles_utils import (
+from sr_smiles.chem_utils.list_utils import common_elements_preserving_order, is_num_permutations_even
+from sr_smiles.chem_utils.smiles_utils import (
     extract_chiral_tag_by_atom_map_num,
     get_atom_map_adjacency_list_from_smiles,
 )
@@ -156,14 +156,14 @@ def update_chirality_in_mol_from_smiles(mol: Chem.Mol, smi: str, smi_ref: str) -
     """Updates the stereochemistry of chiral centers in a molecule.
 
     Updates the stereochemistry of chiral centers in a molecule based on changes in atom
-    neighbor ordering between the original and refernce SMILES (e.g. a CGR-scaffold SMILES).
+    neighbor ordering between the original and refernce SMILES (e.g. a SR-scaffold SMILES).
 
     This function is intended to fix incorrect stereochemistry caused by atom reordering
-    during transformations (e.g., from reaction SMILES to CGR and back). It works by:
+    during transformations (e.g., from reaction SMILES to SR and back). It works by:
       - Extracting the neighbor atom map number orderings from both the original SMILES (`smi`)
-        and the CGR-generated SMILES (`smi_cgr`).
+        and the SR-generated SMILES (`smi_sr`).
       - Iterating over each chiral atom in the molecule.
-      - Comparing the neighbor orderings from `smi` and `smi_cgr` for each atom.
+      - Comparing the neighbor orderings from `smi` and `smi_sr` for each atom.
       - If the permutation between the two orderings is odd (i.e., the parity has flipped),
         the atom's stereochemistry is inverted (CW ↔ CCW).
       - The updated stereochemistry is set directly on the RDKit molecule (`mol`), in place.
@@ -171,10 +171,10 @@ def update_chirality_in_mol_from_smiles(mol: Chem.Mol, smi: str, smi_ref: str) -
     Args:
         mol (Chem.Mol): The RDKit molecule object to update in place.
         smi (str): The original mapped reaction SMILES (or molecule SMILES) string.
-        smi_ref (str): The CGR-transformed SMILES string that may have altered atom orderings.
+        smi_ref (str): The SR-transformed SMILES string that may have altered atom orderings.
     """
     d_smi = get_atom_map_adjacency_list_from_smiles(smi)
-    d_cgr = get_atom_map_adjacency_list_from_smiles(smi_ref)
+    d_sr = get_atom_map_adjacency_list_from_smiles(smi_ref)
 
     for atom in mol.GetAtoms():
         chiral_tag = atom.GetChiralTag()
@@ -186,7 +186,7 @@ def update_chirality_in_mol_from_smiles(mol: Chem.Mol, smi: str, smi_ref: str) -
             smiles_chiral_tag = extract_chiral_tag_by_atom_map_num(smi, atom_map_num)
 
             l1 = d_smi[atom_map_num]
-            l2 = d_cgr[atom_map_num]
+            l2 = d_sr[atom_map_num]
             l1, l2 = common_elements_preserving_order(l1, l2)
 
             if not is_num_permutations_even(l1, l2):

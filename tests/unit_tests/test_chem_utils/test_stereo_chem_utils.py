@@ -1,12 +1,12 @@
 import pytest
 from rdkit import Chem
 
-from cgr_smiles.chem_utils.stereo_chem_utils import (
+from sr_smiles.chem_utils.stereo_chem_utils import (
     find_e_z_stereo_bonds,
     flip_e_z_stereo,
     get_chiral_center_map_nums,
 )
-from cgr_smiles.transforms.rxn_to_cgr import is_chiral_center  # adjust import path as needed
+from sr_smiles.transforms.rxn_to_sr import is_chiral_center  # adjust import path as needed
 
 
 @pytest.mark.parametrize(

@@ -1,6 +1,6 @@
 import logging
 
-logger = logging.getLogger("cgr_smiles")
+logger = logging.getLogger("sr_smiles")
 logger.setLevel(logging.WARNING)
 
 if not logger.handlers:

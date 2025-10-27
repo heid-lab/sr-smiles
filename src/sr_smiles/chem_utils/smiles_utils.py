@@ -5,7 +5,7 @@ from typing import Dict, Iterator, List, Match, Optional, Tuple, Union
 
 from rdkit import Chem
 
-from cgr_smiles.chem_utils.mol_utils import make_mol
+from sr_smiles.chem_utils.mol_utils import make_mol
 
 
 @enum.unique
@@ -44,18 +44,18 @@ ORGANIC_SUBSET = {
 }  # "*" is a "wildcard" or unknown atom
 
 
-def remove_redundant_brackets_and_hydrogens(smi_cgr: str) -> str:
-    """Remove redundant square brackets and explicit hydrogens from a CGR-SMILES string.
+def remove_redundant_brackets_and_hydrogens(smi_sr: str) -> str:
+    """Remove redundant square brackets and explicit hydrogens from an SR-SMILES string.
 
-    This function cleans a CGR-SMILES string by removing brackets that contain only atoms
+    This function cleans an SR-SMILES string by removing brackets that contain only atoms
     from the `ORGANIC_SUBSET` and by eliminating explicit hydrogen atoms where possible,
     while preserving charges, isotopes, and other annotations.
 
     Args:
-        smi_cgr (str): A CGR-SMILES string potentially containing redundant brackets or hydrogens.
+        smi_sr (str): An SR-SMILES string potentially containing redundant brackets or hydrogens.
 
     Returns:
-        str: The cleaned CGR-SMILES string with redundant brackets and hydrogens removed.
+        str: The cleaned SR-SMILES string with redundant brackets and hydrogens removed.
     """
     # Special explicit-H patterns first
     specials = {
@@ -85,25 +85,25 @@ def remove_redundant_brackets_and_hydrogens(smi_cgr: str) -> str:
         return f"[{atom}]"
 
     # replace bracketed atoms when they can be safely simplified
-    smi_cgr = re.sub(r"\[([^\]]+)\]", _replace_bracketed, smi_cgr)
+    smi_sr = re.sub(r"\[([^\]]+)\]", _replace_bracketed, smi_sr)
 
     # collapse identical reac|prod pairs, e.g. {X|X} → X
-    smi_cgr = re.sub(r"\{([A-Za-z0-9@+\-]+)\|\1\}", r"\1", smi_cgr)
+    smi_sr = re.sub(r"\{([A-Za-z0-9@+\-]+)\|\1\}", r"\1", smi_sr)
 
-    return smi_cgr
+    return smi_sr
 
 
-def remove_redundant_brackets(smi_cgr: str) -> str:
-    """Removes redundant square brackets from a CGR-SMILES string.
+def remove_redundant_brackets(smi_sr: str) -> str:
+    """Removes redundant square brackets from an SR-SMILES string.
 
     Brackets are removed only if they enclose atoms from the `ORGANIC_SUBSET`. Brackets
     that include explicit hydrogens, charges, isotopes, or other annotations are preserved.
 
     Args:
-        smi_cgr (str): A CGR-SMILES string potentially containing redundant brackets.
+        smi_sr (str): An SR-SMILES string potentially containing redundant brackets.
 
     Returns:
-        str: CGR-SMILES string with redundant brackets removed.
+        str: SR-SMILES string with redundant brackets removed.
     """
 
     def _replace_bracketed(match: Match[str]) -> str:
@@ -113,31 +113,31 @@ def remove_redundant_brackets(smi_cgr: str) -> str:
         return f"[{atom}]"
 
     # replace [X] with X if X is in the organic subset
-    smi_cgr = re.sub(r"\[([^\]]+)\]", _replace_bracketed, smi_cgr)
+    smi_sr = re.sub(r"\[([^\]]+)\]", _replace_bracketed, smi_sr)
 
     # collapse identical reac|prod pairs, e.g. {X|X} → X
-    smi_cgr = re.sub(r"\{([A-Za-z0-9@+\-]+)\|\1\}", r"\1", smi_cgr)
+    smi_sr = re.sub(r"\{([A-Za-z0-9@+\-]+)\|\1\}", r"\1", smi_sr)
 
-    return smi_cgr
+    return smi_sr
 
 
 def remove_aromatic_bonds(smiles: str) -> str:
-    """Remove aromatic bond symbols (':') outside brackets and CGR bond blocks.
+    """Remove aromatic bond symbols (':') outside brackets and SR bond blocks.
 
-    Handles plain molecular SMILES, reaction SMILES, and CGR-SMILES strings.
+    Handles plain molecular SMILES, reaction SMILES, and SR-SMILES strings.
     The colon (`:`) denotes aromatic bonds in SMILES but also appears
     *inside* brackets (for atom maps, e.g. `[C:1]`) and inside curly braces
-    for CGR bond descriptors (e.g. `{:|=}`). This function removes only those
+    for SR bond descriptors (e.g. `{:|=}`). This function removes only those
     colons that represent aromatic bonds **between atoms**, not those used
     within `[...]` or `{...}` groups.
 
     Args:
-        smiles (str): A SMILES, reaction SMILES, or CGR-SMILES string that may
+        smiles (str): A SMILES, reaction SMILES, or SR-SMILES string that may
             contain colon (':') characters.
 
     Returns:
         str: The same SMILES string with aromatic bond colons removed, while
-        preserving colons inside atom brackets and CGR bond descriptors.
+        preserving colons inside atom brackets and SR bond descriptors.
 
     Example:
         >>> remove_aromatic_bonds("c1:c:c:c:c:c:1")
@@ -149,7 +149,7 @@ def remove_aromatic_bonds(smiles: str) -> str:
     """
     result = []
     in_brackets = False  # inside [ ... ]
-    in_cgr_brackets = False  # inside { ... }
+    in_sr_brackets = False  # inside { ... }
 
     for char in smiles:
         if char == "[":
@@ -157,12 +157,12 @@ def remove_aromatic_bonds(smiles: str) -> str:
         elif char == "]":
             in_brackets = False
         elif char == "{":
-            in_cgr_brackets = True
+            in_sr_brackets = True
         elif char == "}":
-            in_cgr_brackets = False
+            in_sr_brackets = False
 
         # Skip ':' when it's an aromatic bond (outside both brackets & braces)
-        if char == ":" and not in_brackets and not in_cgr_brackets:
+        if char == ":" and not in_brackets and not in_sr_brackets:
             continue
 
         result.append(char)
@@ -293,7 +293,7 @@ def parse_bonds_in_order_from_smiles(smiles: str) -> Dict[Tuple[int, int], str]:
             Tuples to their bond specifier string.
 
     Raises:
-        ValueError: If the CGR-SMILES string has malformed syntax.
+        ValueError: If the SR-SMILES string has malformed syntax.
     """
     replace_dict_bonds = {}
     anchor_logical_idx = None
@@ -506,11 +506,11 @@ def is_kekule(atom_mapped_rxn_smi: str) -> bool:
     return True
 
 
-# def get_list_of_atom_map_numbers_from_cgr_smiles(cgr_smi: str) -> List[str]:
+# def get_list_of_atom_map_numbers_from_sr_smiles(sr_smi: str) -> List[str]:
 #     """Extract all atom map numbers from a SMILES string in traversal order.
 
 #     Args:
-#         cgr_smi (str): A SMILES string potentially containing atom map numbers.
+#         sr_smi (str): A SMILES string potentially containing atom map numbers.
 
 #     Returns:
 #         List[int]: A list of atom map numbers as integers, extracted from left to right.
@@ -523,9 +523,9 @@ def is_kekule(atom_mapped_rxn_smi: str) -> bool:
 #     mapnum_pattern = re.compile(r":(\d+)\]")
 
 #     pos = 0
-#     for m in group_pattern.finditer(cgr_smi):
+#     for m in group_pattern.finditer(sr_smi):
 #         # process text before the group
-#         before = cgr_smi[pos : m.start()]
+#         before = sr_smi[pos : m.start()]
 #         result.extend(int(x) for x in mapnum_pattern.findall(before))
 
 #         # process inside the group -> deduplicated numbers
@@ -539,7 +539,7 @@ def is_kekule(atom_mapped_rxn_smi: str) -> bool:
 #         pos = m.end()
 
 #     # process the tail after the last group
-#     tail = cgr_smi[pos:]
+#     tail = sr_smi[pos:]
 #     result.extend(int(x) for x in mapnum_pattern.findall(tail))
 
 #     return result

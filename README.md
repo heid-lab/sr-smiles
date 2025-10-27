@@ -3,13 +3,13 @@
 
 <!-- <div align="center">
 
-[![Build Status](https://github.com/heid-lab/cgr-smiles/actions/workflows/tests.yml/badge.svg)](https://github.com/heid-lab/cgr-smiles/actions)
-[![Coverage](https://codecov.io/gh/heid-lab/cgr-smiles/branch/main/graph/badge.svg)](https://codecov.io/gh/heid-lab/cgr-smiles)
+[![Build Status](https://github.com/heid-lab/sr-smiles/actions/workflows/tests.yml/badge.svg)](https://github.com/heid-lab/sr-smiles/actions)
+[![Coverage](https://codecov.io/gh/heid-lab/sr-smiles/branch/main/graph/badge.svg)](https://codecov.io/gh/heid-lab/sr-smiles)
 
-[![License](https://img.shields.io/github/license/heid-lab/cgr-smiles)](https://github.com/heid-lab/cgr-smiles/blob/main/LICENSE)
-[![PyPI](https://img.shields.io/pypi/v/cgr-smiles.svg)](https://pypi.org/project/cgr-smiles/)
-[![Python versions](https://img.shields.io/pypi/pyversions/cgr-smiles.svg)](https://pypi.org/project/cgr-smiles)
-[![Downloads](https://img.shields.io/github/downloads/heid-lab/cgr-smiles/total.svg)](https://github.com/heid-lab/cgr-smiles/releases)
+[![License](https://img.shields.io/github/license/heid-lab/sr-smiles)](https://github.com/heid-lab/sr-smiles/blob/main/LICENSE)
+[![PyPI](https://img.shields.io/pypi/v/sr-smiles.svg)](https://pypi.org/project/sr-smiles/)
+[![Python versions](https://img.shields.io/pypi/pyversions/sr-smiles.svg)](https://pypi.org/project/sr-smiles)
+[![Downloads](https://img.shields.io/github/downloads/heid-lab/sr-smiles/total.svg)](https://github.com/heid-lab/sr-smiles/releases)
 
 </div> -->
 
@@ -19,40 +19,40 @@
 
 Note: This repository is not yet public and not yet on PyPI, hence the installation is not yet possible via pip. [WIP]
 
-# CGR-SMILES
+# SR-SMILES
 
 <!-- TODO: Add a banner -->
 
-**CGR-SMILES** is a Python library for transforming reaction SMILES into a more compact and change-aware representation called **CGR-SMILES**. This representation explicitly encodes changes in chemical reactions, making it suitable for machine learning and data-driven applications.
+**SR-SMILES** is a Python library for transforming reaction SMILES into a more compact and change-aware representation called **Superimposed Reaction(SR) SMILES**. This representation explicitly encodes changes in chemical reactions, making it suitable for machine learning and data-driven applications.
 
 
 ---
 
 ## Overview
 
-The CGR‑SMILES is inspired by the Condensed Graph of Reaction (CGR) representation,
+The SR‑SMILES is inspired by the Condensed Graph of Reaction (CGR) representation,
 a concept originating from graph‑based cheminformatics [[1]](#references).
 
 In a classical CGR, the reactant and product graphs of a chemical reactions are superimposed and represented as a single unified graph. Atoms common to both sides are merged, and bonds are annotated with their changes (e.g., “single → double”, “added”, or “removed”).
 
-CGR‑SMILES brings this concept to the string domain, making it suitable for language modeling applications. Instead of representing reactions as separate reactants and products, CGR‑SMILES combines them into a compact, local‑change‑aware representation that explicitly encodes how atoms and bonds transform.
+SR‑SMILES brings this concept to the string domain, making it suitable for language modeling applications. Instead of representing reactions as separate reactants and products, SR‑SMILES combines them into a compact, local‑change‑aware representation that explicitly encodes how atoms and bonds transform.
 It  is applicable to any organic reaction of the form `{reactant(s)}>>{product(s)}`.
 
 While atom mappings are required to perform the transformation, the library provides workarounds for unmapped or partially mapped reactions by integrating atom‑mapping tools such as `RXNMapper` [[2]](#references).
 
 Let's take a look at an example:
-![Reaction and CGR examples](./figures/readme/rxn_vs_cgr_smiles.png)
+![RXN- and SR-SMILES examples](./figures/readme/rxn_vs_sr_smiles.png)
 <!--
-**Reaction SMILES:**
+**RXN-SMILES:**
 
 <code><span style="color:green">[F-:6]</span>.<span style="color:blue">[Br:1]</span><span style="color:magenta">[C@:2]</span>([H:5])([CH3:3])[NH2:4]>><span style="color:blue">[Br-:1]</span>.[CH3:3]<span style="color:magenta">[C@:2]</span>([H:5])(<span style="color:green">[F:6]</span>)[NH2:4]</code>
 
 
-**CGR‑SMILES**:
+**SR‑SMILES**:
 
 <code><span style="color:green">{[F-]|F}</span>{~|-}<span style="color:magenta">{[C@]|[C@@]}</span>({-|~}<span style="color:blue">{Br|[Br-]}</span>)([H])([CH3])[NH2]</code> -->
 
-👉 Notice how the CGR‑SMILES is more compact and explicitly encodes where atoms and bonds change during the reaction.
+👉 Notice how the SR‑SMILES is more compact and explicitly encodes where atoms and bonds change during the reaction.
 
 ---
 
@@ -63,28 +63,28 @@ Let's take a look at an example:
 [WIP]
 
 ```bash
-pip install cgr-smiles
+pip install sr-smiles
 ```
 
 ---
 
 ## Usage
 
-### Your CGR-SMILES Toolkit: Seamless Reaction Conversions
+### Your SR-SMILES Toolkit: Seamless Reaction Conversions
 
 The simplest use case involves mapped and balanced reactions. But don’t worry, the library also handles unmapped or unbalanced cases.
 
-There are several ways to use CGR‑SMILES depending on your workflow:
+There are several ways to use SR‑SMILES depending on your workflow:
 
 1. **Core functions** (simple, flexible)
-    - `rxn_to_cgr()`
-    - `cgr_to_rxn()`
+    - `rxn_to_sr()`
+    - `sr_to_rxn()`
 2. **Wrapper classes** (convenient for bulk data)
-    - `RxnToCgr()`
-    - `CgrToRxn()`
+    - `RxnToSr()`
+    - `SrToRxn()`
 3. **CLI** (file-based workflows)
-    - `rxn2cgr`
-    - `cgr2rxn`
+    - `rxn2sr`
+    - `sr2rxn`
 
 In the following sections, we’ll walk through basic examples for each option.
 
@@ -93,26 +93,26 @@ In the following sections, we’ll walk through basic examples for each option.
 Let’s start with the imports:
 
 ```python
-from cgr_smiles import CgrToRxn, RxnToCgr, cgr_to_rxn, rxn_to_cgr
+from sr_smiles import SrToRxn, RxnToSr, sr_to_rxn, rxn_to_sr
 ```
 
-### 1. Core functions (`rxn_to_cgr()` and `cgr_to_rxn()`)
+### 1. Core functions (`rxn_to_sr()` and `sr_to_rxn()`)
 
-These are the best place to start when exploring CGR‑SMILES. They provide a simple, direct way to understand how the library transforms reactions between RXN and CGR-SMILES.
+These are the best place to start when exploring SR‑SMILES. They provide a simple, direct way to understand how the library transforms reactions between RXN and SR-SMILES.
 
 ```python
 rxn_smiles = "[F-:6].[Br:1][C@:2]([H:5])([CH3:3])[NH2:4]>>[Br-:1].[CH3:3][C@:2]([H:5])([F:6])[NH2:4]"
 
-cgr_smiles = rxn_to_cgr(
+sr_smiles = rxn_to_sr(
     rxn_smiles
 )
-rxn_back_with_mapping = cgr_to_rxn(
-    cgr_smiles,
+rxn_back_with_mapping = sr_to_rxn(
+    sr_smiles,
     add_atom_mapping=True  # optionally, to show atom mapping in the output smiles, defaults to False
 )
 
 print(f"RXN SMILES (original input):\n\t{rxn_smiles}\n")
-print(f"CGR-SMILES (without mapping):\n\t{cgr_smiles}\n")
+print(f"SR-SMILES (without mapping):\n\t{sr_smiles}\n")
 print(f"RXN SMILES (without mapping numbers):\n\t{rxn_back_without_mapping}\n")
 ```
 
@@ -120,18 +120,18 @@ print(f"RXN SMILES (without mapping numbers):\n\t{rxn_back_without_mapping}\n")
 RXN SMILES (original input):
 	[F-:6].[Br:1][C@:2]([H:5])([CH3:3])[NH2:4]>>[Br-:1].[CH3:3][C@:2]([H:5])([F:6])[NH2:4]
 
-CGR-SMILES (without mapping):
+SR-SMILES (without mapping):
 	{[F-]|[F]}{~|-}{[C@]|[C@@]}({-|~}{[Br]|[Br-]})([H])([CH3])[NH2]
 
 RXN SMILES (without mapping numbers):
 	O=C(C#C[H])[H]>>[O+]#[C-].C(#C[H])[H]
 ```
 
-### 2. Wrapper classes (`RxnToCgr()` and `CgrToRxn()`)
+### 2. Wrapper classes (`RxnToSr()` and `SrToRxn()`)
 
 These offer a convenient, efficient interface for practical use, as they are ideal for processing large datasets or handling more complex cases like unmapped and unbalanced reactions.
 
-**RXN to CGR:**
+**RXN to SR:**
 ```python
 import pandas as pd
 
@@ -140,31 +140,31 @@ rxn_list = [
     "[O:1]([C@@:2]([C:3](=[O:4])[H:9])([C:5]#[C:6][H:10])[H:8])[H:7]>>[O:1]([C@@:2]([C:3][O:4][H:9])([C:5]#[C:6][H:10])[H:8])[H:7]",
 ]
 
-# using the RxnToCgr transform on a list of reactions
-transform_to_cgr = RxnToCgr()
-cgr_results = transform_to_cgr(rxn_list)
+# using the RxnToSr transform on a list of reactions
+transform_to_sr = RxnToSr()
+sr_results = transform_to_sr(rxn_list)
 
-# using the RxnToCgr transform on a pd.DataFrame
+# using the RxnToSr transform on a pd.DataFrame
 df_data = pd.DataFrame({"reactions": rxn_list})
-transform_to_cgr = RxnToCgr(
+transform_to_sr = RxnToSr(
     rxn_col="reactions"    # <- in this case we need to specify the column name!
 )
-df_data["cgr_smiles"] = transform_to_cgr(rxn_list)
+df_data["sr_smiles"] = transform_to_sr(rxn_list)
 
-assert cgr_results == df_data["cgr_smiles"].tolist()
-print("CGR-SMILES:\n\t" + "\n\t".join(cgr_results))
+assert sr_results == df_data["sr_smiles"].tolist()
+print("SR-SMILES:\n\t" + "\n\t".join(sr_results))
 ```
 
 ```output
-CGR-SMILES:
+SR-SMILES:
 	[N]#[C][C@@]1([H])[C]2([H]){-|~}[H]{~|-}[O]1{-|~}2
 	[O]([C@@]([C]1{=|-}[O]{~|-}[H]{-|~}1)([C]#[C][H])[H])[H]
 ```
 
-**And CGR back to RXN:**
+**And SR back to RXN:**
 ```python
-transform_to_rxn = CgrToRxn(add_atom_mapping=True)
-rxns = transform_to_rxn(cgr_results)
+transform_to_rxn = SrToRxn(add_atom_mapping=True)
+rxns = transform_to_rxn(sr_results)
 
 print("RXNs:\n\t" + "\n\t".join(rxns))
 ```
@@ -186,36 +186,36 @@ rxn_list = [
 
 # using the wrapper with a pandas DataFrame
 df_data = pd.DataFrame({"reaction": rxn_list})
-transform_to_cgr_df = RxnToCgr(
+transform_to_sr_df = RxnToSr(
     rxn_col="reaction",
     mapping_method="rxn_mapper",
     balance_rxn=True,
 )
-df_data["cgr_smiles"] = transform_to_cgr_df(df_data)
-print("\nDataFrame with CGR-SMILES:\n", df_data)
+df_data["sr_smiles"] = transform_to_sr_df(df_data)
+print("\nDataFrame with SR-SMILES:\n", df_data)
 ```
 
 ```output
-DataFrame with CGR-SMILES:
-                   reaction                        cgr_smiles
+DataFrame with SR-SMILES:
+                   reaction                        sr_smiles
 0                CCO>>CC=O  [CH3]{[CH2]|[CH]}{-|=}{[OH]|[O]}
 1                    N>>NC           {[NH3]|[NH2]}{~|-}[CH3]
 2  [NH3:1]>>[NH2:1][CH3:2]           {[NH3]|[NH2]}{~|-}[CH3]
 ```
 
 
-### 3. Command Line Interface (`rxn2cgr` and `cgr2rxn`)
+### 3. Command Line Interface (`rxn2sr` and `sr2rxn`)
 
 If your prefer working with a CLI tool , that be it:
 
 ```bash
-╭────────── 🚀 CGR‑SMILES Converter v0.0.1 ─────────╮
+╭────────── 🚀 SR‑SMILES Converter v0.0.1 ────-─────╮
 │                                                   │
-│   👋 Welcome to CGR‑SMILES                        │
-│   Transforming Reaction SMILES ➡️ CGR‑SMILES      │
+│   👋 Welcome to SR‑SMILES                         │
+│   Transforming Reaction SMILES ➡️ SR‑SMILES        │
 │                                                   │
 │   Input column:   'rxn_smiles'                    │
-│   Output column:  'cgr_smiles'                    │
+│   Output column:  'sr_smiles'                     │
 │   Input file:     path/to/input.csv               │
 │   Output file:    path/to/output.csv              │
 │                                                   │
@@ -223,10 +223,10 @@ If your prefer working with a CLI tool , that be it:
 ```
 **The forward transformation:**
 ```bash
-rxn2cgr path/to/input.csv \             # required (input CSV)
+rxn2sr path/to/input.csv \              # required (input CSV)
     -o path/to/output.csv \             # optional output CSV
     --rxn-col rxn_smiles \              # name of the RXN SMILES column
-    --cgr-col cgr_smiles \              # name of the new CGR‑SMILES column
+    --sr-col sr_smiles \                # name of the new SR‑SMILES column
     --mapping-method rxn_mapper \       # mapping method (default: None)
     --keep-atom-mapping \               # preserve atom mapping
     --balance-rxn                       # enable reaction balancing
@@ -237,9 +237,9 @@ rxn2cgr path/to/input.csv \             # required (input CSV)
 **And the backward transformation:**
 
 ```bash
-cgr2rxn output_cgr.csv \                # required (input CSV)
+sr2rxn output_sr.csv \                  # required (input CSV)
     -o path/to/output.csv \             # optional output CSV
-    --cgr-col cgr_smiles \              # name of the CGR‑SMILES column
+    --sr-col sr_smiles \                # name of the SR‑SMILES column
     --rxn-col rxn_back                  # name of the new RXN SMILES column
 ```
 

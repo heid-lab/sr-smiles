@@ -1,7 +1,7 @@
 [project]
-name = "cgr-smiles"
+name = "sr-smiles"
 version = "0.1.0"
-description = "A Python library to convert reaction SMILES into CGR-SMILES."
+description = "A Python library to convert reaction SMILES into superimposed reaction (SR) SMILES."
 authors = [
     {name = "Charlotte Gerhaher", email = "charlotte.gerhaher@tuwien.ac.at"}
 ]
@@ -15,8 +15,8 @@ dependencies = [
 ]
 
 [project.scripts]
-rxn2cgr = "cgr_smiles.io.cli:main_rxn2cgr"
-cgr2rxn = "cgr_smiles.io.cli:main_cgr2rxn"
+rxn2sr = "sr_smiles.io.cli:main_rxn2sr"
+sr2rxn = "sr_smiles.io.cli:main_sr2rxn"
 
 [project.optional-dependencies]
 rxnmapper = ["rxnmapper (>=0.4.2,<0.5.0)"]

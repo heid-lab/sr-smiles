@@ -4,8 +4,8 @@ from typing import List
 import pytest
 from rdkit import Chem
 
-from cgr_smiles.chem_utils.mol_utils import make_mol
-from cgr_smiles.data_augmentation import (
+from sr_smiles.chem_utils.mol_utils import make_mol
+from sr_smiles.data_augmentation import (
     augment_atom_traversal_order,
     augment_reassign_atom_map_nums,
     augment_rxn_smiles,

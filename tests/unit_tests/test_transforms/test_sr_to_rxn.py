@@ -3,23 +3,23 @@ import pytest
 from conftest import equivalent_reactions
 from rdkit import Chem
 
-from cgr_smiles import ROOT_DIR
-from cgr_smiles.chem_utils.smiles_utils import canonicalize
-from cgr_smiles.transforms.cgr_to_rxn import (
-    CgrToRxn,
-    add_atom_mapping_to_cgr,
-    cgr_to_rxn,
+from sr_smiles import ROOT_DIR
+from sr_smiles.chem_utils.smiles_utils import canonicalize
+from sr_smiles.transforms.rxn_to_sr import rxn_to_sr
+from sr_smiles.transforms.sr_to_rxn import (
+    SrToRxn,
+    add_atom_mapping_to_sr,
     find_e_z_stereo_bonds,
     get_chiral_center_map_nums,
-    get_reac_prod_scaffold_smiles_from_cgr,
-    is_cgr_smiles_fully_atom_mapped,
+    get_reac_prod_scaffold_smiles_from_sr_smiles,
     is_kekule,
+    is_sr_smiles_fully_atom_mapped,
     parse_bonds_in_order_from_smiles,
     remove_bonds_by_atom_map_nums,
+    sr_to_rxn,
     update_chirality_tags,
     update_e_z_stereo_chem,
 )
-from cgr_smiles.transforms.rxn_to_cgr import rxn_to_cgr
 
 # TODO: test case: F/C=C/C=C/C
 # TODO test for correct parsing of the bonds (all are valid):
@@ -29,40 +29,40 @@ from cgr_smiles.transforms.rxn_to_cgr import rxn_to_cgr
 # C0CCCCC0
 
 
-TEST_DATA_PATH = ROOT_DIR / "tests" / "data" / "cgr_test_cases.csv"
+TEST_DATA_PATH = ROOT_DIR / "tests" / "data" / "sr_test_cases.csv"
 
 
-def load_cgr_test_cases():
+def load_sr_test_cases():
     """Loads test cases from a CSV file once per test module."""
     df = pd.read_csv(TEST_DATA_PATH)
     return df
 
 
-DF = load_cgr_test_cases()
-CGR_TEST_CASES = list(zip(DF["rxn"], DF["rxn_smiles"], DF["cgr_smiles"]))
+DF = load_sr_test_cases()
+SR_TEST_CASES = list(zip(DF["rxn"], DF["rxn_smiles"], DF["sr_smiles"]))
 
 
-@pytest.mark.parametrize("rxn_id, rxn_smiles, cgr_smiles", CGR_TEST_CASES)
-def test_mapped_cgr_to_rxn(rxn_id, rxn_smiles, cgr_smiles):
-    """Check that CGR (with mapping!) to RXN conversion reproduces the original reaction SMILES."""
-    res1 = cgr_to_rxn(cgr_smiles)
+@pytest.mark.parametrize("rxn_id, rxn_smiles, sr_smiles", SR_TEST_CASES)
+def test_mapped_sr_to_rxn(rxn_id, rxn_smiles, sr_smiles):
+    """Check that SR (with mapping!) to RXN conversion reproduces the original reaction SMILES."""
+    res1 = sr_to_rxn(sr_smiles)
     rxn2 = canonicalize(rxn_smiles)
     res2 = canonicalize(res1)
     assert rxn2 == res2, f"Assertion error for reaction with id {rxn_id}"
 
 
-@pytest.mark.parametrize("rxn_id, rxn_smiles, cgr_smiles", CGR_TEST_CASES)
-def test_unmapped_cgr_to_rxn(rxn_id, rxn_smiles, cgr_smiles):
-    """Check that CGR (unmapped) to RXN conversion reproduces an equivalent to the original RXN SMILES."""
-    cgr = rxn_to_cgr(rxn_smiles, remove_brackets=True, remove_hydrogens=True)
-    assert not is_cgr_smiles_fully_atom_mapped(cgr)
+@pytest.mark.parametrize("rxn_id, rxn_smiles, sr_smiles", SR_TEST_CASES)
+def test_unmapped_sr_to_rxn(rxn_id, rxn_smiles, sr_smiles):
+    """Check that SR (unmapped) to RXN conversion reproduces an equivalent to the original RXN SMILES."""
+    sr = rxn_to_sr(rxn_smiles, remove_brackets=True, remove_hydrogens=True)
+    assert not is_sr_smiles_fully_atom_mapped(sr)
 
-    rxn = cgr_to_rxn(cgr, add_atom_mapping=True)
+    rxn = sr_to_rxn(sr, add_atom_mapping=True)
     assert equivalent_reactions(rxn_smiles, rxn)
 
 
 @pytest.mark.parametrize(
-    "cgr, expected",
+    "sr, expected",
     [
         (
             "CC(C)(C)OC(=O)O{-|~}C(OC(C)(C)C)(=O){~|-}{[nH]|n}1c2ccc(C(C)=O)cc2cc1",
@@ -98,24 +98,24 @@ def test_unmapped_cgr_to_rxn(rxn_id, rxn_smiles, cgr_smiles):
         ),
     ],
 )
-def test_add_atom_mapping_to_cgr(cgr, expected):
-    """Add atom mapping to a CGR-SMILES."""
-    assert add_atom_mapping_to_cgr(cgr) == expected
+def test_add_atom_mapping_to_sr(sr, expected):
+    """Add atom mapping to an SR-SMILES."""
+    assert add_atom_mapping_to_sr(sr) == expected
 
 
-def test_cgr_to_rxn_invalid_smiles(propagated_logger, caplog):
-    """Verify that invalid CGR-SMILES input logs a warning and returns an empty string."""
-    bad_smi = "INVALID-CGR-SMILES"
+def test_sr_to_rxn_invalid_smiles(propagated_logger, caplog):
+    """Verify that invalid SR-SMILES input logs a warning and returns an empty string."""
+    bad_smi = "INVALID-SR-SMILES"
 
     with caplog.at_level("WARNING", logger=propagated_logger.name):
-        result = cgr_to_rxn(bad_smi)
+        result = sr_to_rxn(bad_smi)
 
     assert result == ""
     # assert len(caplog.records) == 1, caplog.records
 
     record = caplog.records[0]
     assert record.levelname == "WARNING"
-    assert "Failed to process CGR-SMILES" in record.message, record.message
+    assert "Failed to process SR-SMILES" in record.message, record.message
     # assert "Returning empty string." in record.message
 
 
@@ -173,10 +173,10 @@ def e_z_stereo_test_cases():
 E_Z_STEREO_CASES = e_z_stereo_test_cases()
 
 
-@pytest.mark.parametrize("idx, rxn_smiles, cgr_smiles", E_Z_STEREO_CASES)
-def test_cgr_to_rxn_e_z_stereo(idx, rxn_smiles, cgr_smiles):
-    """Check that E/Z stereochemistry is correctly preserved in RXN->CGR->RXN conversion."""
-    result = cgr_to_rxn(cgr_smiles)
+@pytest.mark.parametrize("idx, rxn_smiles, sr_smiles", E_Z_STEREO_CASES)
+def test_sr_to_rxn_e_z_stereo(idx, rxn_smiles, sr_smiles):
+    """Check that E/Z stereochemistry is correctly preserved in RXN->SR->RXN conversion."""
+    result = sr_to_rxn(sr_smiles)
     can_res = canonicalize(result)
     can_rxn = canonicalize(rxn_smiles)
     assert can_res == can_rxn, f"Assertion error for reaction with id {idx}"
@@ -224,30 +224,30 @@ def test_remove_bonds_by_atom_map_nums_invalid_key():
 def test_update_chirality_tags_without_flip():
     """Test that chirality is preserved when the neighbor order implies no flip.
 
-    The chirality in the SMILES and CGR scaffold differs in tag (@ vs @@),
+    The chirality in the SMILES and SR scaffold differs in tag (@ vs @@),
     but the neighbor order leads to an even permutation, so no flip is needed.
     The original SMILES should be returned unchanged.
     """
     smiles = "[C:1][C@:2]([Br:3])([Cl:4])[N:5]"
-    cgr_scaffold = "[C:1][C@@:2]([Br:3])([N:5])[Cl:4]"
+    sr_scaffold = "[C:1][C@@:2]([Br:3])([N:5])[Cl:4]"
     chiral_centers = [2]
 
-    modified_smiles = update_chirality_tags(smiles, cgr_scaffold, chiral_centers)
+    modified_smiles = update_chirality_tags(smiles, sr_scaffold, chiral_centers)
     assert modified_smiles == smiles
 
 
 def test_update_chirality_tags_with_flip():
     """Test that chirality tag is flipped when the neighbor order implies inversion.
 
-    The input SMILES has a '@' tag, and the CGR scaffold has '@',
+    The input SMILES has a '@' tag, and the SR scaffold has '@',
     but the neighbor order is an odd permutation, so chirality must be flipped.
     The output should have '@@' instead of '@'.
     """
     smiles = "[C:1][C@:2]([Br:3])([Cl:4])[N:5]"
-    cgr_scaffold = "[C:1][C@:2]([Br:3])([N:5])[Cl:4]"
+    sr_scaffold = "[C:1][C@:2]([Br:3])([N:5])[Cl:4]"
     chiral_centers = [2]
 
-    modified_smiles = update_chirality_tags(smiles, cgr_scaffold, chiral_centers)
+    modified_smiles = update_chirality_tags(smiles, sr_scaffold, chiral_centers)
     expected_output = "[C:1][C@@:2]([Br:3])([Cl:4])[N:5]"
 
     assert modified_smiles == expected_output
@@ -345,14 +345,14 @@ def test_update_e_z_stereo_chem_with_disconnected_molecule():
     assert modified_smiles == "[c:1]1([CH2:9]/[N:10]=[N:11]/[CH3:12])[n:2][n:3][cH:4][n:5][n:6]1.[CH4:13]"
 
 
-def test_get_reac_prod_scaffold_smiles_from_cgr():
-    """Tests parsing of a CGR string into reactant and product scaffold SMILES."""
-    cgr = "{[O:1]|[O+:1]}{=|#}{[C:2]|[C-:2]}1{-|~}[C:3](#[C:4][H:6]){~|-}[H:5]{-|~}1"
+def test_get_reac_prod_scaffold_smiles_from_sr():
+    """Tests parsing of an SR string into reactant and product scaffold SMILES."""
+    sr = "{[O:1]|[O+:1]}{=|#}{[C:2]|[C-:2]}1{-|~}[C:3](#[C:4][H:6]){~|-}[H:5]{-|~}1"
 
     expected_reac = "[O:1]=[C:2]1-[C:3](#[C:4][H:6])~[H:5]-1"
     expected_prod = "[O+:1]#[C-:2]1~[C:3](#[C:4][H:6])-[H:5]~1"
 
-    reac, prod = get_reac_prod_scaffold_smiles_from_cgr(cgr)
+    reac, prod = get_reac_prod_scaffold_smiles_from_sr_smiles(sr)
 
     assert reac == expected_reac, f"Reactant SMILES mismatch: got {reac}"
     assert prod == expected_prod, f"Product SMILES mismatch: got {prod}"
@@ -377,24 +377,24 @@ def test_get_chiral_center_map_nums_no_chirality():
     assert chiral_centers == [], f"Expected no chiral centers, but got {chiral_centers}"
 
 
-def test_CgrToRxn_single_string():
-    """Test CgrToRxn class for single CGR-SMILES."""
-    transform = CgrToRxn()
-    cgr_smiles = DF.iloc[0]["cgr_smiles"]
+def test_SrToRxn_single_string():
+    """Test SrToRxn class for single SR-SMILES."""
+    transform = SrToRxn()
+    sr_smiles = DF.iloc[0]["sr_smiles"]
     exp_output = DF.iloc[0]["rxn_smiles"]
-    result = transform(cgr_smiles)
+    result = transform(sr_smiles)
 
     assert isinstance(result, str)
     assert result == exp_output
 
 
-def test_CgrToRxn_list_of_strings():
-    """Test CgrToRxn class for a list of CGR-SMILES."""
-    transform = CgrToRxn()
-    cgr_smiles = DF["cgr_smiles"].tolist()
+def test_SrToRxn_list_of_strings():
+    """Test SrToRxn class for a list of SR-SMILES."""
+    transform = SrToRxn()
+    sr_smiles = DF["sr_smiles"].tolist()
     exp_output = DF["rxn_smiles"].tolist()
 
-    results = transform(cgr_smiles)
+    results = transform(sr_smiles)
 
     assert isinstance(results, list)
     assert all(isinstance(r, str) for r in results)
@@ -402,13 +402,13 @@ def test_CgrToRxn_list_of_strings():
         assert canonicalize(res) == canonicalize(gt)
 
 
-def test_CgrToRxn_pd_series():
-    """Test CgrToRxn class for a pd.Series input."""
-    transform = CgrToRxn()
-    cgr_smiles = DF["cgr_smiles"]
+def test_SrToRxn_pd_series():
+    """Test SrToRxn class for a pd.Series input."""
+    transform = SrToRxn()
+    sr_smiles = DF["sr_smiles"]
     exp_output = DF["rxn_smiles"]
 
-    results = transform(cgr_smiles)
+    results = transform(sr_smiles)
 
     assert isinstance(results, pd.Series)
     assert all(isinstance(r, str) for r in results)
@@ -416,12 +416,12 @@ def test_CgrToRxn_pd_series():
         assert canonicalize(res) == canonicalize(gt)
 
 
-def test_CgrToRxn_pd_df():
-    """Test CgrToRxn class for a pd.DataFrame input."""
-    transform = CgrToRxn(cgr_col="cgr_smiles")
-    df_cgr_smiles = DF
+def test_SrToRxn_pd_df():
+    """Test SrToRxn class for a pd.DataFrame input."""
+    transform = SrToRxn(sr_col="sr_smiles")
+    df_sr_smiles = DF
     exp_output = DF["rxn_smiles"]
-    results = transform(df_cgr_smiles)
+    results = transform(df_sr_smiles)
 
     assert isinstance(results, pd.Series)
     assert all(isinstance(r, str) for r in results)
@@ -429,17 +429,17 @@ def test_CgrToRxn_pd_df():
         assert canonicalize(res) == canonicalize(gt)
 
 
-def test_dataframe_without_cgr_col_raises():
-    """Test that CgrToRxn raises ValueError if `self.cgr_col` not set."""
-    transform = CgrToRxn()
-    df = pd.DataFrame({"cgr": ["CGR>>SMILES"]})
-    with pytest.raises(ValueError, match="`self.cgr_col` is not set"):
+def test_dataframe_without_sr_col_raises():
+    """Test that SrToRxn raises ValueError if `self.sr_col` not set."""
+    transform = SrToRxn()
+    df = pd.DataFrame({"sr": ["SR>>SMILES"]})
+    with pytest.raises(ValueError, match="`self.sr_col` is not set"):
         transform(df)
 
 
 def test_invalid_input_type():
-    """Test that CgrToRxn raises TypeError if input type is not valid."""
-    transform = CgrToRxn()
+    """Test that SrToRxn raises TypeError if input type is not valid."""
+    transform = SrToRxn()
     with pytest.raises(TypeError):
         transform(12345)
 
@@ -450,12 +450,12 @@ def test_invalid_input_type():
         ("", str),
         ([], list),
         (pd.Series([], dtype=object), pd.Series),
-        (pd.DataFrame({"cgr_smiles": []}), pd.Series),
+        (pd.DataFrame({"sr_smiles": []}), pd.Series),
     ],
 )
-def test_CgrToRxn_empty_inputs(empty_input, expected_type):
-    """Test CgrToRxn call for empty inputs."""
-    transform = CgrToRxn(cgr_col="cgr_smiles")
+def test_SrToRxn_empty_inputs(empty_input, expected_type):
+    """Test SrToRxn call for empty inputs."""
+    transform = SrToRxn(sr_col="sr_smiles")
 
     result = transform(empty_input)
 
@@ -468,7 +468,7 @@ def test_CgrToRxn_empty_inputs(empty_input, expected_type):
 
 
 @pytest.mark.parametrize(
-    "cgr_smiles,is_fully_mapped",
+    "sr_smiles,is_fully_mapped",
     [
         ("{[O:1]|[O+:1]}[C:2]([C:3])", True),
         ("{[O:1]|[O+:1]}[C:5]([C:2])", True),
@@ -476,31 +476,31 @@ def test_CgrToRxn_empty_inputs(empty_input, expected_type):
         ("{[O:1]|[O+:1]}C([C:2])", False),
     ],
 )
-def test_is_cgr_smiles_fully_atom_mapped(cgr_smiles, is_fully_mapped):
-    """Check if a CGR-SMILES is fully atom-mapped."""
-    assert is_cgr_smiles_fully_atom_mapped(cgr_smiles) == is_fully_mapped
+def test_is_sr_smiles_fully_atom_mapped(sr_smiles, is_fully_mapped):
+    """Check if an SR-SMILES is fully atom-mapped."""
+    assert is_sr_smiles_fully_atom_mapped(sr_smiles) == is_fully_mapped
 
 
-def test_cgr_to_rxn_keep_atom_mapping():
-    """Test cgr2rxn with unmapped cgr smiles."""
-    cgr = "F{-|/}[CH]=[CH]{-|/}{F|[F+]}"
-    cgr_with_map = cgr_to_rxn(cgr, add_atom_mapping=True)
+def test_sr_to_rxn_keep_atom_mapping():
+    """Test sr2rxn with unmapped sr smiles."""
+    sr = "F{-|/}[CH]=[CH]{-|/}{F|[F+]}"
+    sr_with_map = sr_to_rxn(sr, add_atom_mapping=True)
     expected = "[F:1][CH:2]=[CH:3][F:4]>>[F:1]/[CH:2]=[CH:3]/[F+:4]"
-    assert cgr_with_map == expected
+    assert sr_with_map == expected
 
 
-def test_cgr_to_rxn_do_not_keep_atom_mapping():
-    """Test cgr2rxn with unmapped cgr smiles."""
-    cgr = "F{-|/}[CH]=[CH]{-|/}{F|[F+]}"
-    cgr_with_map = cgr_to_rxn(cgr, add_atom_mapping=False)
+def test_sr_to_rxn_do_not_keep_atom_mapping():
+    """Test sr2rxn with unmapped sr smiles."""
+    sr = "F{-|/}[CH]=[CH]{-|/}{F|[F+]}"
+    sr_with_map = sr_to_rxn(sr, add_atom_mapping=False)
     expected = "F[CH]=[CH]F>>F/[CH]=[CH]/[F+]"
-    assert cgr_with_map == expected
+    assert sr_with_map == expected
 
 
-def test_cgr_to_rxn_in_kekule_form():
-    """Check CGR to RXN conversion on a non-aromatic CGR string."""
-    cgr = "C1(C(C)=O)=CC=C2C(=C1)C=CN2{-|~}C(=O)(OC(C)(C)C){~|-}O"
-    r, p = cgr_to_rxn(cgr).split(">>")
+def test_sr_to_rxn_in_kekule_form():
+    """Check SR to RXN conversion on a non-aromatic SR string."""
+    sr = "C1(C(C)=O)=CC=C2C(=C1)C=CN2{-|~}C(=O)(OC(C)(C)C){~|-}O"
+    r, p = sr_to_rxn(sr).split(">>")
 
     exp_r = "C1(C(C)=O)=CC=C2C(=C1)C=CN2C(=O)OC(C)(C)C.O"
     exp_p = "C1(C(C)=O)=CC=C2C(=C1)C=CN2.C(=O)(OC(C)(C)C)O"
@@ -509,10 +509,10 @@ def test_cgr_to_rxn_in_kekule_form():
     assert p == exp_p
 
 
-def test_cgr_to_rxn_cgr_not_in_kekule_form():
-    """Check CGR to RXN conversion on an aromatic CGR string."""
-    cgr = "c1(C(C)=O)ccc2c(c1){c|C}{:|=}{c|C}{n|N}2{-|~}C(=O)(OC(C)(C)C){~|-}O"
-    r, p = cgr_to_rxn(cgr).split(">>")
+def test_sr_to_rxn_sr_not_in_kekule_form():
+    """Check SR to RXN conversion on an aromatic SR string."""
+    sr = "c1(C(C)=O)ccc2c(c1){c|C}{:|=}{c|C}{n|N}2{-|~}C(=O)(OC(C)(C)C){~|-}O"
+    r, p = sr_to_rxn(sr).split(">>")
 
     exp_r = "c1(C(C)=O)ccc2c(c1)ccn2C(=O)OC(C)(C)C.O"
     exp_p = "c1(C(C)=O)ccc2c(c1)C=CN2.C(=O)(OC(C)(C)C)O"
@@ -545,6 +545,6 @@ def test_is_rxn_smiles_kekule(smiles, kekule):
         ("[O:1][C:2]([Cl:3])>>[O+:1][C:2]([c:3])", False),
     ],
 )
-def test_is_cgr_smiles_kekule(smiles, kekule):
-    """Check if a given CGR-SMILES is kekulized."""
+def test_is_sr_smiles_kekule(smiles, kekule):
+    """Check if a given SR-SMILES is kekulized."""
     assert is_kekule(smiles) == kekule
