@@ -77,7 +77,7 @@ def main_rxn2sr():
     parser.add_argument("--keep-atom-mapping", action="store_true", help="Preserve atom mapping")
     parser.add_argument("--remove-hydrogens", action="store_true", help="Remove explicit hydrogens")
     parser.add_argument(
-        "--use-rxn-mapper",
+        "--use-rxnmapper",
         action="store_true",
         help="Use RxnMapper for atom mapping before SR transformation",
     )
