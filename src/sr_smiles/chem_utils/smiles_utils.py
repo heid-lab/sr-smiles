@@ -194,17 +194,17 @@ def remove_explicit_hydrogens_from_sr_smiles(sr_smiles: str, h_map_nums_to_remov
 
 
 def remove_redundant_brackets_and_hydrogens(smi_sr: str) -> str:
-    """Remove redundant square brackets and explicit hydrogens from an SR-SMILES string.
+    """Remove redundant square brackets and explicit hydrogens from an sr-SMILES string.
 
-    This function cleans an SR-SMILES string by removing brackets that contain only atoms
+    This function cleans an sr-SMILES string by removing brackets that contain only atoms
     from the `ORGANIC_SUBSET` and by eliminating explicit hydrogen atoms where possible,
     while preserving charges, isotopes, and other annotations.
 
     Args:
-        smi_sr (str): An SR-SMILES string potentially containing redundant brackets or hydrogens.
+        smi_sr (str): An sr-SMILES string potentially containing redundant brackets or hydrogens.
 
     Returns:
-        str: The cleaned SR-SMILES string with redundant brackets and hydrogens removed.
+        str: The cleaned sr-SMILES string with redundant brackets and hydrogens removed.
     """
     # Special explicit-H patterns first
     specials = {

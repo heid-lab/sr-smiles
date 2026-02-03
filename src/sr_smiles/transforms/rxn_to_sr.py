@@ -35,10 +35,10 @@ from sr_smiles.reaction_balancing import balance_reaction, is_balanced
 
 
 class RxnToSr:
-    """Transform reaction SMILES into SR-SMILES.
+    """Transform reaction SMILES into sr-SMILES.
 
     This class provides a callable interface for converting reaction SMILES into
-    Superimposed Reaction (SR) SMILES. It supports single strings, lists
+    Superimposed Reaction (sr) SMILES. It supports single strings, lists
     of strings, pandas Series, and pandas DataFrames.
 
     Transformation options include atom mapping preservation, bracket and
@@ -46,23 +46,23 @@ class RxnToSr:
 
     Attributes:
         keep_atom_mapping (bool): Preserve atom mapping numbers in the output.
-        remove_hydrogens (bool): Remove hydrogens from the output SR-SMILES.
+        remove_hydrogens (bool): Remove hydrogens from the output sr-SMILES.
             Automatically detects the hydrogen representation in the input:
             - If hydrogens are individually mapped (e.g., [H:1]), removes unchanged
               explicit hydrogens (those not involved in bond/charge/radical changes).
             - If hydrogens are implicit (e.g., [CH3]), simplifies to bare atoms (C).
         balance_rxn (bool): Attempt to balance the reaction stoichiometry before
-            SR generation.
+            sr generation.
         rxn_col (Optional[str]): Column name in a DataFrame containing reaction SMILES.
         kekulize (bool): Convert aromatic atoms/bonds into explicit Kekulé notation.
             Defaults to False (keep aromatic notation).
         keep_aromatic_bonds (bool):  If True and used together with
             `kekulize=False`, aromatic bonds will be explicitly retained in the
-            Kekulé-expanded SR (where supported). If False under `kekulize=False`,
+            Kekulé-expanded sr (where supported). If False under `kekulize=False`,
             aromaticity is fully converted into alternating single/double bonds.
             Has no effect if `kekulize=True`. Defaults to True.
         use_rxnmapper (bool): If True, use RXNMapper for atom mapping before
-            SR transformation. Requires the rxnmapper package to be installed.
+            sr transformation. Requires the rxnmapper package to be installed.
             Defaults to False.
     """
 
@@ -110,7 +110,7 @@ class RxnToSr:
     def __call__(
         self, data: Union[str, List[str], pd.Series, pd.DataFrame]
     ) -> Union[str, List[str], pd.Series, pd.DataFrame]:
-        """Applies the transformation of RXN to SR-SMILES.
+        """Applies the transformation of RXN to sr-SMILES.
 
         Args:
             data (Union[str, List[str], pd.Series, pd.DataFrame]): Input reaction SMILES.
@@ -118,7 +118,7 @@ class RxnToSr:
 
         Returns:
             Union[str, List[str], pd.Series, pd.DataFrame]: Output data of the same type
-            as `data`, with each entry converted into its SR-SMILES representation.
+            as `data`, with each entry converted into its sr-SMILES representation.
 
         Raises:
             ValueError: If a DataFrame is provided but `self.rxn_col` is not set.
@@ -174,34 +174,34 @@ def rxn_to_sr(
     kekulize: bool = False,
     keep_aromatic_bonds: bool = False,
 ) -> str:
-    """Converts a reaction SMILES string into a Superimposed Reaction (SR) SMILES.
+    """Converts a reaction SMILES string into a Superimposed Reaction (sr) SMILES.
 
-    An SR-SMILES encodes the transformation between reactant and product molecules
+    An sr-SMILES encodes the transformation between reactant and product molecules
     as a single, compact string representation, where atoms and bonds are annotated to
     show differences in atom types, bond orders, and stereochemistry.
 
     Args:
         rxn_smi (str): A reaction SMILES string in the format "reactant>>product".
         keep_atom_mapping (bool): If True, atom map numbers will be retained in the
-            output SR-SMILES. Otherwise they will be removed (default).
-        remove_hydrogens (bool): If True, removes hydrogens from the output SR-SMILES.
+            output sr-SMILES. Otherwise they will be removed (default).
+        remove_hydrogens (bool): If True, removes hydrogens from the output sr-SMILES.
             Automatically detects the hydrogen representation in the input:
             - If hydrogens are individually mapped (e.g., [H:1]), removes unchanged
               explicit hydrogens (those not involved in bond/charge/radical changes).
             - If hydrogens are implicit (e.g., [CH3]), simplifies to bare atoms (C).
         balance_rxn (bool, optional): If True, attempts to balance the reaction
-            before generating the SR. Defaults to False.
+            before generating the sr. Defaults to False.
         kekulize (bool, optional): If True, converts all aromatic atoms/bonds into a
             specific Kekulé representation with alternating single/double bonds.
             Defaults to False (keep aromatic notation).
         keep_aromatic_bonds (bool, optional): If True and used together with
             `kekulize=False`, aromatic bonds will be explicitly retained in the
-            Kekulé-expanded SR (where supported). If False under `kekulize=False`,
+            Kekulé-expanded sr (where supported). If False under `kekulize=False`,
             aromaticity is fully converted into alternating single/double bonds.
             Has no effect if `kekulize=True`. Defaults to True.
 
     Returns:
-        str: An SR-SMILES string representing the reaction as a single molecule
+        str: An sr-SMILES string representing the reaction as a single molecule
         with annotations of changes using `{reac|prod}` syntax.
 
     Notes:
@@ -215,7 +215,7 @@ def rxn_to_sr(
         >>> rxn_to_sr(rxn_smiles)
         "[C:1]1([H:3])([H:4])([H:5]){-|~}[H:6]{~|-}[H:7]{-|~}[Cl:2]{~|-}1"
 
-        # In the resulting SR-SMILES, the `{reac|prod}` notation encodes how atoms and bonds
+        # In the resulting sr-SMILES, the `{reac|prod}` notation encodes how atoms and bonds
         # change from reactants to products. For example, '[H:6]{~|-}[H:7]' means that while there
         # was no bond between these two hydrogen atoms in the reactants, a single bond has been
         # formed between them in the product molecule.
@@ -292,8 +292,8 @@ def get_sr_scaffold(mol_reac: Chem.Mol, mol_prod: Chem.Mol, kekulize: bool) -> C
 
     Returns:
         Tuple[str, Chem.Mol]:
-            - smi_sr (str): SMILES string of the generated SR scaffold.
-            - mol_sr (Chem.Mol): RDKit molecule object of the SR scaffold.
+            - smi_sr (str): SMILES string of the generated sr scaffold.
+            - mol_sr (Chem.Mol): RDKit molecule object of the sr scaffold.
     """
     # extract atom indices between reac and prod via atom map numbers
     ri2pi = get_reac_to_prod_mapping(mol_reac, mol_prod)
@@ -320,7 +320,7 @@ def get_sr_scaffold(mol_reac: Chem.Mol, mol_prod: Chem.Mol, kekulize: bool) -> C
 def get_chirality_aligned_smiles_and_mols(
     rxn_smi: str, kekulize: bool, max_permutations: int = 5
 ) -> Tuple[str, str, Chem.Mol, Chem.Mol, Chem.Mol]:
-    """Build reactant, product, and SR molecules from a reaction SMILES.
+    """Build reactant, product, and sr molecules from a reaction SMILES.
 
     Parses a reaction SMILES, builds RDKit molecule objects, and reorders
     them so that atom mapping and tetrahedral stereochemistry (chirality)
@@ -329,7 +329,7 @@ def get_chirality_aligned_smiles_and_mols(
     The routine performs the following steps:
       1. Parses the reaction SMILES into separate reactant and product strings.
       2. Builds RDKit Mol objects with optional kekulization.
-      3. Constructs a superimposed reaction (SR) and uses its
+      3. Constructs a superimposed reaction (sr) and uses its
          atom mapping to reorder reactant and product atoms.
       4. Detects tetrahedral centers present in both molecules and checks
          neighbor permutation parity.
@@ -348,10 +348,10 @@ def get_chirality_aligned_smiles_and_mols(
         Tuple[str, str, str, str, Chem.Mol, Chem.Mol, Chem.Mol]:
             A tuple of:
                 * **rxn_smi_aligned** (`str`): Possibly reordered reaction SMILES.
-                * **smi_sr** (`str`): SMILES of the superimposed reaction (SR).
+                * **smi_sr** (`str`): SMILES of the superimposed reaction (sr).
                 * **mol_reac** (`Chem.Mol`): Reactant molecule.
                 * **mol_prod** (`Chem.Mol`): Product molecule.
-                * **mol_sr** (`Chem.Mol`): SR molecule.
+                * **mol_sr** (`Chem.Mol`): sr molecule.
     """
     frag_permutations = get_fragment_permutations(rxn_smi.split(">>")[0], max_permutations)
 
@@ -424,12 +424,12 @@ def add_radical_sign(smarts_string: str, n_radicals: int) -> str:
 def extract_atom_and_bond_changes(
     mol_reac: Chem.Mol, mol_prod: Chem.Mol, mol_sr: Chem.Mol
 ) -> tuple[dict[int, str], dict[tuple[int, int], str]]:
-    """Extract atom- and bond-level transformation SMARTS between reactant, product, and SR molecules.
+    """Extract atom- and bond-level transformation SMARTS between reactant, product, and sr molecules.
 
     Args:
         mol_reac (Chem.Mol): reactant molecule.
         mol_prod (Chem.Mol): product molecule.
-        mol_sr (Chem.Mol): superimposed reaction (SR) molecule.
+        mol_sr (Chem.Mol): superimposed reaction (sr) molecule.
 
     Returns:
         Tuple[
@@ -511,16 +511,16 @@ def build_sr_smiles(
     replace_dict_atoms: Dict[int, str],
     replace_dict_bonds: Dict[Tuple[int, int], str],
 ) -> str:
-    """Converts an SR scaffold SMILES into an SR-SMILES with explicit atom and bond replacements.
+    """Converts an sr-SMILES scaffold into an sr-SMILES with explicit atom and bond replacements.
 
     Args:
-        smi_sr_scaffold (str): Scaffold of the SR-SMILES.
+        smi_sr_scaffold (str): Scaffold of the sr-SMILES.
         replace_dict_atoms (dict[int, str]): Map number → replacement SMARTS for atoms.
         replace_dict_bonds (dict[tuple[int, int], str]):
             (begin_map, end_map) → replacement SMARTS for bonds.
 
     Returns:
-        str: The constructed SR-SMILES string.
+        str: The constructed sr-SMILES string.
     """
     smiles = ""
     anchor = None

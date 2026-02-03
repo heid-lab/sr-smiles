@@ -23,7 +23,7 @@ Note: This repository is not yet public and not yet on PyPI, hence the installat
 
 <!-- TODO: Add a banner -->
 
-**SR-SMILES** is a Python library for transforming reaction SMILES into a more compact and change-aware representation called **Superimposed Reaction (SR) SMILES**. This representation explicitly encodes changes in chemical reactions, making it suitable for machine learning and data-driven applications.
+**sr-SMILES** is a Python library for transforming reaction SMILES into a more compact and change-aware representation called **superimposed reaction (sr) SMILES**. This representation explicitly encodes changes in chemical reactions, making it suitable for machine learning and data-driven applications.
 
 
 ---
@@ -41,7 +41,7 @@ It  is applicable to any organic reaction of the form `{reactant(s)}>>{product(s
 While atom mappings are required to perform the transformation, the library provides workarounds for unmapped or partially mapped reactions by integrating atom‑mapping tools such as `RXNMapper` [[2]](#references).
 
 Let's take a look at an example:
-![RXN- and SR-SMILES examples](./figures/readme/rxn_vs_sr_smiles.png)
+![RXN- and sr-SMILES examples](./figures/readme/rxn_vs_sr_smiles.png)
 <!--
 **RXN-SMILES:**
 
@@ -70,7 +70,7 @@ pip install sr-smiles
 
 ## Usage
 
-### Your SR-SMILES Toolkit: Seamless Reaction Conversions
+### Your sr-SMILES Toolkit: Seamless Reaction Conversions
 
 The simplest use case involves mapped and balanced reactions. But don’t worry, the library also handles unmapped or unbalanced cases.
 
@@ -98,7 +98,7 @@ from sr_smiles import SrToRxn, RxnToSr, sr_to_rxn, rxn_to_sr
 
 ### 1. Core functions (`rxn_to_sr()` and `sr_to_rxn()`)
 
-These are the best place to start when exploring SR‑SMILES. They provide a simple, direct way to understand how the library transforms reactions between RXN and SR-SMILES.
+These are the best place to start when exploring SR‑SMILES. They provide a simple, direct way to understand how the library transforms reactions between RXN and sr-SMILES.
 
 ```python
 rxn_smiles = "[F-:6].[Br:1][C@:2]([H:5])([CH3:3])[NH2:4]>>[Br-:1].[CH3:3][C@:2]([H:5])([F:6])[NH2:4]"
@@ -112,7 +112,7 @@ rxn_back_with_mapping = sr_to_rxn(
 )
 
 print(f"RXN SMILES (original input):\n\t{rxn_smiles}\n")
-print(f"SR-SMILES (without mapping):\n\t{sr_smiles}\n")
+print(f"sr-SMILES (without mapping):\n\t{sr_smiles}\n")
 print(f"RXN SMILES (without mapping numbers):\n\t{rxn_back_without_mapping}\n")
 ```
 
@@ -120,7 +120,7 @@ print(f"RXN SMILES (without mapping numbers):\n\t{rxn_back_without_mapping}\n")
 RXN SMILES (original input):
 	[F-:6].[Br:1][C@:2]([H:5])([CH3:3])[NH2:4]>>[Br-:1].[CH3:3][C@:2]([H:5])([F:6])[NH2:4]
 
-SR-SMILES (without mapping):
+sr-SMILES (without mapping):
 	{[F-]|[F]}{~|-}{[C@]|[C@@]}({-|~}{[Br]|[Br-]})([H])([CH3])[NH2]
 
 RXN SMILES (without mapping numbers):
@@ -152,16 +152,16 @@ transform_to_sr = RxnToSr(
 df_data["sr_smiles"] = transform_to_sr(rxn_list)
 
 assert sr_results == df_data["sr_smiles"].tolist()
-print("SR-SMILES:\n\t" + "\n\t".join(sr_results))
+print(sr-SMILES:\n\t" + "\n\t".join(sr_results))
 ```
 
 ```output
-SR-SMILES:
+sr-SMILES:
 	[N]#[C][C@@]1([H])[C]2([H]){-|~}[H]{~|-}[O]1{-|~}2
 	[O]([C@@]([C]1{=|-}[O]{~|-}[H]{-|~}1)([C]#[C][H])[H])[H]
 ```
 
-**And SR back to RXN:**
+**And sr back to RXN:**
 ```python
 transform_to_rxn = SrToRxn(add_atom_mapping=True)
 rxns = transform_to_rxn(sr_results)
@@ -192,11 +192,11 @@ transform_to_sr_df = RxnToSr(
     balance_rxn=True,
 )
 df_data["sr_smiles"] = transform_to_sr_df(df_data)
-print("\nDataFrame with SR-SMILES:\n", df_data)
+print("\nDataFrame with sr-SMILES:\n", df_data)
 ```
 
 ```output
-DataFrame with SR-SMILES:
+DataFrame with sr-SMILES:
                    reaction                        sr_smiles
 0                CCO>>CC=O  [CH3]{[CH2]|[CH]}{-|=}{[OH]|[O]}
 1                    N>>NC           {[NH3]|[NH2]}{~|-}[CH3]
@@ -212,7 +212,7 @@ If your prefer working with a CLI tool , that be it:
 ╭────────── 🚀 SR‑SMILES Converter v0.0.1 ────-─────╮
 │                                                   │
 │   👋 Welcome to SR‑SMILES                         │
-│   Transforming Reaction SMILES ➡️ SR‑SMILES        │
+│   Transforming Reaction SMILES ➡️ SR‑SMILES       │
 │                                                   │
 │   Input column:   'rxn_smiles'                    │
 │   Output column:  'sr_smiles'                     │
@@ -226,7 +226,7 @@ If your prefer working with a CLI tool , that be it:
 rxn2sr path/to/input.csv \              # required (input CSV)
     -o path/to/output.csv \             # optional output CSV
     --rxn-col rxn_smiles \              # name of the RXN SMILES column
-    --sr-col sr_smiles \                # name of the new SR‑SMILES column
+    --sr-col sr_smiles \                # name of the new sr‑SMILES column
     --mapping-method rxn_mapper \       # mapping method (default: None)
     --keep-atom-mapping \               # preserve atom mapping
     --balance-rxn                       # enable reaction balancing
@@ -239,7 +239,7 @@ rxn2sr path/to/input.csv \              # required (input CSV)
 ```bash
 sr2rxn output_sr.csv \                  # required (input CSV)
     -o path/to/output.csv \             # optional output CSV
-    --sr-col sr_smiles \                # name of the SR‑SMILES column
+    --sr-col sr_smiles \                # name of the sr‑SMILES column
     --rxn-col rxn_back                  # name of the new RXN SMILES column
 ```
 

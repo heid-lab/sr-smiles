@@ -61,7 +61,7 @@ def simple_smiles() -> str:
 
 
 # def test_remove_redundant_square_brackets_sr_smiles():
-#     """Test removal of square brackets from a SR smiles."""
+#     """Test removal of square brackets from a sr-SMILES."""
 #     sr_smiles = "{[O]|[O+]}{=|#}{[C]|[C-]}1{-|~}[H]{~|-}[C]{-|~}1#[C][H]"
 #     sr_wo_am = remove_redundant_square_brackets(sr_smiles)
 #     assert sr_wo_am == "{O|[O+]}{=|#}{C|[C-]}1{-|~}[H]{~|-}C{-|~}1#C[H]"

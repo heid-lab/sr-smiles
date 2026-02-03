@@ -17,8 +17,8 @@ console = Console()
 class Direction(Enum):
     """Enumeration for the transformation directions."""
 
-    RXN2SR = "Reaction SMILES ➡️ SR-SMILES"
-    SR2RXN = "SR-SMILES ➡️ Reaction SMILES"
+    RXN2SR = "Reaction SMILES ➡️ sr-SMILES"
+    SR2RXN = "sr-SMILES ➡️ Reaction SMILES"
 
 
 def print_banner(
@@ -32,7 +32,7 @@ def print_banner(
     banner_text = Text()
 
     banner_text.append("👋 Welcome to ", style="bold green")
-    banner_text.append("SR-SMILES\n", style="bold cyan underline")
+    banner_text.append("sr-SMILES\n", style="bold cyan underline")
 
     banner_text.append("Transforming ", style="yellow")
     banner_text.append(f"{direction.value}", style="bold yellow")
@@ -49,7 +49,7 @@ def print_banner(
     console.print(
         Panel(
             Align.center(banner_text),
-            title=f"[bold cyan]🚀 SR-SMILES Converter v{sr_smiles.__version__}[/bold cyan]",
+            title=f"[bold cyan]🚀 sr-SMILES Converter v{sr_smiles.__version__}[/bold cyan]",
             border_style="cyan",
             padding=(1, 4),
             expand=False,
@@ -68,18 +68,18 @@ def reverse_reaction_smiles(rxn_smiles: str) -> str:
 
 
 def main_rxn2sr():
-    """CLI entry point: convert reaction SMILES to SR-SMILES in a CSV."""
-    parser = argparse.ArgumentParser(description="Convert reaction SMILES to SR-SMILES")
+    """CLI entry point: convert reaction SMILES to sr-SMILES in a CSV."""
+    parser = argparse.ArgumentParser(description="Convert reaction SMILES to sr-SMILES")
     parser.add_argument("csv_file", help="Path to input CSV file")
     parser.add_argument("-o", "--output", help="Path to output CSV file (default: overwrite input)")
     parser.add_argument("--rxn-col", default="rxn_smiles", help="Column name with reaction SMILES")
-    parser.add_argument("--sr-col", default="sr_smiles", help="Name of new column for SR-SMILES")
+    parser.add_argument("--sr-col", default="sr_smiles", help="Name of new column for sr-SMILES")
     parser.add_argument("--keep-atom-mapping", action="store_true", help="Preserve atom mapping")
     parser.add_argument("--remove-hydrogens", action="store_true", help="Remove explicit hydrogens")
     parser.add_argument(
         "--use-rxnmapper",
         action="store_true",
-        help="Use RxnMapper for atom mapping before SR transformation",
+        help="Use RxnMapper for atom mapping before sr-SMILES transformation",
     )
     parser.add_argument("--balance-rxn", action="store_true", help="Balance the given reaction")
     parser.add_argument("--product-based", action="store_true", help="Balance the given reaction")
@@ -134,11 +134,11 @@ def main_rxn2sr():
 
 
 def main_sr2rxn():
-    """CLI entry point: convert SR-SMILES to reaction SMILES in a CSV."""
-    parser = argparse.ArgumentParser(description="Convert SR-SMILES to reaction SMILES")
+    """CLI entry point: convert sr-SMILES to reaction SMILES in a CSV."""
+    parser = argparse.ArgumentParser(description="Convert sr-SMILES to reaction SMILES")
     parser.add_argument("csv_file", help="Path to input CSV file")
     parser.add_argument("-o", "--output", help="Path to output CSV file (default: overwrite input)")
-    parser.add_argument("--sr-col", default="sr_smiles", help="Column name with SR-SMILES")
+    parser.add_argument("--sr-col", default="sr_smiles", help="Column name with sr-SMILES")
     parser.add_argument("--rxn-col", default="rxn_smiles", help="Name of new column for reaction SMILES")
 
     args = parser.parse_args()

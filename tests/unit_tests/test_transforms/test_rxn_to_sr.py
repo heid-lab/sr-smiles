@@ -24,7 +24,7 @@ SR_TEST_CASES = list(zip(DF["rxn"], DF["rxn_smiles"], DF["sr_smiles"]))
 
 @pytest.mark.parametrize("rxn_id, rxn_smiles, sr_smiles", SR_TEST_CASES)
 def test_rxn_to_sr(rxn_id, rxn_smiles, sr_smiles):
-    """Test the RXN to SR (forward) transformation."""
+    """Test the RXN to sr-SMILES (forward) transformation."""
     result = rxn_to_sr(rxn_smiles, keep_atom_mapping=True)
     assert result == sr_smiles, f"Assertion error for reaction with id {rxn_id}"
 
@@ -82,7 +82,7 @@ def e_z_stereo_test_cases():
 
 @pytest.mark.parametrize("idx, rxn_smiles, sr_smiles", e_z_stereo_test_cases())
 def test_rxn_to_sr_e_z_stereo(idx, rxn_smiles, sr_smiles):
-    """Test E/Z stereo changes in RXN to SR transformation."""
+    """Test E/Z stereo changes in RXN to sr-SMILES transformation."""
     result = rxn_to_sr(rxn_smiles, keep_atom_mapping=True)
     assert result == sr_smiles, f"Assertion error for reaction with id {idx}"
 
@@ -234,8 +234,8 @@ def test_RxnToSr_with_rxnmapper():
     result = transform(rxn_smiles)
 
     assert isinstance(result, str)
-    assert result != ""  # Should produce a valid SR-SMILES
-    assert "{" in result  # Should contain SR notation for bond changes
+    assert result != ""  # Should produce a valid sr-SMILES
+    assert "{" in result  # Should contain sr notation for bond changes
 
 
 def test_dataframe_without_rxn_col_raises():

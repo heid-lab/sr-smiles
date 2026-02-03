@@ -80,7 +80,7 @@ test_cases, ids = generate_individual_tests()
 @pytest.mark.e2e
 @pytest.mark.parametrize("file_path, idx, rxn_smiles, rxn_col", test_cases, ids=ids)
 def test_roundtrip_per_sample(file_path, idx, rxn_smiles, rxn_col):
-    """Test single sample roundtrip (RXN -> SR -> RXN)."""
+    """Test single sample roundtrip (RXN -> sr -> RXN)."""
     rxn_can = canonicalize(rxn_smiles)
     sr = rxn_to_sr(rxn_smiles, keep_atom_mapping=True)
 
@@ -99,7 +99,7 @@ def test_roundtrip_per_sample(file_path, idx, rxn_smiles, rxn_col):
 @pytest.mark.e2e
 @pytest.mark.parametrize("file_path, idx, rxn_smiles, rxn_col", test_cases, ids=ids)
 def test_roundtrip_per_sample_with_unmapped_sr_smiles(file_path, idx, rxn_smiles, rxn_col):
-    """Test single sample roundtrip (RXN -> SR -> RXN)."""
+    """Test single sample roundtrip (RXN -> sr -> RXN)."""
     rxn_can = canonicalize(rxn_smiles)
     sr = rxn_to_sr(rxn_smiles, keep_atom_mapping=False)
 
@@ -142,7 +142,7 @@ subset_test_cases, subset_ids = generate_individual_tests(max_samples=10)
 
 @pytest.fixture(scope="module")
 def transform_back():
-    """Single backward transformer instance (SR → Rxn)."""
+    """Single backward transformer instance (sr → RXN)."""
     return SrToRxn()
 
 
@@ -156,7 +156,7 @@ def forward_transformer(request):
 def test_RxnToSr_roundtrip_with_mapping(
     forward_transformer, transform_back, file_path, idx, rxn_smiles, rxn_col
 ):
-    """Ensure round-trip Rxn → SR → Rxn equivalence with/without RxnMapper."""
+    """Ensure round-trip RXN → sr → RXN equivalence with/without RxnMapper."""
     sr = forward_transformer(rxn_smiles)
     rxn_back = transform_back(sr)
 

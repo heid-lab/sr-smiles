@@ -87,7 +87,7 @@ def is_fully_atom_mapped(rxn_smiles: str) -> bool:
 
 
 def is_sr_smiles_fully_atom_mapped(sr_smiles: str) -> bool:
-    """Checks if an SR-SMILES string is fully atom-mapped.
+    """Checks if an sr-SMILES string is fully atom-mapped.
 
     Checks according to the following definition:
     - All SRTOKENs ({...|...}) must have both alternatives atom-mapped with
@@ -167,7 +167,7 @@ def add_atom_mapping(
 
 
 def add_atom_mapping_to_sr(sr: str) -> str:
-    """Add atom mapping numbers to a SR-SMILES string.
+    """Add atom mapping numbers to a sr-SMILES string.
 
     Each atom gets a continuous unique index: 1, 2, 3, ...
     Atoms inside the same {...|...} group share one index.

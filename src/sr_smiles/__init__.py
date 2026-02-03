@@ -1,4 +1,4 @@
-"""SR-SMILES representation of chemical reactions."""
+"""sr-SMILES representation of chemical reactions."""
 
 from pathlib import Path
 

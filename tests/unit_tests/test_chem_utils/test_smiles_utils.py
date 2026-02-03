@@ -113,7 +113,7 @@ def test_remove_atom_mapping_rxn_smiles():
 
 
 def test_remove_atom_mapping_sr_smiles():
-    """Test removal of atom mapping from an SR smiles."""
+    """Test removal of atom mapping from an sr-SMILES."""
     rxn_smiles = "{[O:1]|[O+:1]}{=|#}{[C:2]|[C-:2]}1{-|~}[H:5]{~|-}[C:3]{-|~}1#[C:4][H:6]"
     rxn_wo_am = remove_atom_mapping(rxn_smiles)
     assert rxn_wo_am == "{[O]|[O+]}{=|#}{[C]|[C-]}1{-|~}[H]{~|-}[C]{-|~}1#[C][H]"
