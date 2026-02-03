@@ -35,7 +35,7 @@ def make_mol(smi: str, sanitize: bool = True, kekulize: bool = True) -> Chem.Mol
     Chem.AssignStereochemistry(mol)
 
     try:
-        test_mol = Chem.Mol(mol)  # make a copy
+        test_mol = Chem.Mol(mol)
         rdkit.RDLogger.DisableLog("rdApp.error")
         Chem.Kekulize(test_mol)
         rdkit.RDLogger.EnableLog("rdApp.error")
@@ -162,53 +162,3 @@ def remove_bonds_by_atom_map_nums(mol: Chem.Mol, atom_map_pairs: List[Tuple[int,
 
     final_mol = emol.GetMol()
     return final_mol
-
-
-# def get_atom_map_num(mol: Chem.Mol, atom_idx: int) -> int:
-#     """Retrieves the atom mapping number for a specified atom in an RDKit molecule.
-
-#     Args:
-#         mol (Chem.Mol): The RDKit molecule.
-#         atom_idx (int): The index of the atom within the molecule.
-
-#     Returns:
-#         int: The atom mapping number of the specified atom.
-#     """
-#     num_atoms = mol.GetNumAtoms()
-#     assert (
-#         0 <= atom_idx < mol.GetNumAtoms()
-#     ), f"Error: Atom index {atom_idx} is out of bounds for mol with {num_atoms} atoms."
-
-#     atom = mol.GetAtomWithIdx(atom_idx)
-#     return atom.GetAtomMapNum()
-
-# def get_atom_indices_and_smarts(mol: Chem.Mol) -> List[Tuple[int, str]]:
-#     """Extract each atom's index and its corresponding SMARTS representation from the molecule.
-
-#     Args:
-#         mol (Chem.Mol): The molecule to process.
-
-#     Returns:
-#         List[Tuple[int, str]]: A list of tuples where each contains an atom's index and its SMARTS string.
-#     """
-#     num_atoms = mol.GetNumAtoms()
-#     atom_indices = [
-#         (i, mol.GetAtomWithIdx(i).GetSmarts(isomericSmiles=True, allHsExplicit=True))
-#         for i in range(num_atoms)
-#     ]
-#     return atom_indices
-
-
-# def get_bond_idx(mol: Chem.Mol, atom_idx1: int, atom_idx2: int) -> Optional[int]:
-#     """Get the bond index between two atoms in a molecule.
-
-#     Args:
-#         mol (Chem.Mol): The molecule containing the atoms.
-#         atom_idx1 (int): Index of the first atom.
-#         atom_idx2 (int): Index of the second atom.
-
-#     Returns:
-#         Optional[int]: The bond index if a bond exists between the two atoms; otherwise None.
-#     """
-#     bond = mol.GetBondBetweenAtoms(atom_idx1, atom_idx2)
-#     return bond.GetIdx() if bond is not None else None

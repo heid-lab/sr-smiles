@@ -11,7 +11,7 @@ TEST_DATA_PATH = ROOT_DIR / "tests" / "data"
 
 @pytest.mark.e2e
 def test_cli_rxn2sr_and_sr2rxn(tmp_path: Path):
-    """Test the end-to-end CLI workflow from reaction to SR and back."""
+    """Test the end-to-end CLI workflow from reaction to sr-SMILES and back."""
     input_file = TEST_DATA_PATH / "rdb7" / "test.csv"
     forward_file = tmp_path / "cli_test_cases_forward.csv"
     backward_file = tmp_path / "cli_test_cases_backward.csv"

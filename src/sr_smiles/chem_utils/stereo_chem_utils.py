@@ -156,12 +156,12 @@ def update_chirality_in_mol_from_smiles(mol: Chem.Mol, smi: str, smi_ref: str) -
     """Updates the stereochemistry of chiral centers in a molecule.
 
     Updates the stereochemistry of chiral centers in a molecule based on changes in atom
-    neighbor ordering between the original and refernce SMILES (e.g. a SR-scaffold SMILES).
+    neighbor ordering between the original and refernce SMILES (e.g. a sr-scaffold SMILES).
 
     This function is intended to fix incorrect stereochemistry caused by atom reordering
-    during transformations (e.g., from reaction SMILES to SR and back). It works by:
+    during transformations (e.g., from reaction SMILES to sr-SMILES and back). It works by:
       - Extracting the neighbor atom map number orderings from both the original SMILES (`smi`)
-        and the SR-generated SMILES (`smi_sr`).
+        and the sr-generated SMILES (`smi_sr`).
       - Iterating over each chiral atom in the molecule.
       - Comparing the neighbor orderings from `smi` and `smi_sr` for each atom.
       - If the permutation between the two orderings is odd (i.e., the parity has flipped),
@@ -171,7 +171,7 @@ def update_chirality_in_mol_from_smiles(mol: Chem.Mol, smi: str, smi_ref: str) -
     Args:
         mol (Chem.Mol): The RDKit molecule object to update in place.
         smi (str): The original mapped reaction SMILES (or molecule SMILES) string.
-        smi_ref (str): The SR-transformed SMILES string that may have altered atom orderings.
+        smi_ref (str): The sr-transformed SMILES string that may have altered atom orderings.
     """
     d_smi = get_atom_map_adjacency_list_from_smiles(smi)
     d_sr = get_atom_map_adjacency_list_from_smiles(smi_ref)

@@ -84,23 +84,6 @@ def is_rxn_mapped(rxn_smi: str) -> bool:
     return True
 
 
-# def make_balanced_and_fully_mapped(rxn_smi: str) -> str:
-#     is_mapped = is_rxn_mapped(rxn_smi)
-#     is_balanced = is_balanced(rxn_smi)
-#     if is_balanced and is_mapped:
-#         return rxn_smi
-#     elif is_balanced and not is_mapped:
-#         # add atom mapping
-#         rxn_smi = add_atom_mapping(rxn_smi, method="graph_overlay")  # or rxn_mapper
-#         return rxn_smi
-#     elif not is_balanced:
-#         # check if their is a partial mapping:
-#         # add a partial mapping
-#         rxn_smi = add_atom_mapping(rxn_smi, method="graph_overlay")  # or rxn_mapper
-#         rxn_smi = balance_reaction(rxn_smi)
-#         return rxn_smi
-
-
 # our assumption: if we receive an unbalanced, partially mapped reaction,
 # we assume the mapping is present for the intersection of atoms that occour
 # in both reac and prod. Otherwise, we delete the mapping, and create a new one.
@@ -126,11 +109,10 @@ def balance_reaction(rxn_smiles: str, kekulize: bool = False) -> str:
         make_mol(smi_prod, kekulize=kekulize),
     )
 
-    # Editable version of reactant mol
     rw_reac = Chem.RWMol(mol_reac)
     rw_prod = Chem.RWMol(mol_prod)
 
-    # Map numbers present in each side
+    # map numbers present in each side
     map_nums_reac = {a.GetAtomMapNum() for a in mol_reac.GetAtoms()}
     map_nums_prod = {a.GetAtomMapNum() for a in mol_prod.GetAtoms()}
 
@@ -149,18 +131,18 @@ def balance_reaction(rxn_smiles: str, kekulize: bool = False) -> str:
             atom.SetAtomMapNum(max_map_num + 1)
             max_map_num += 1
 
-    # Find atoms missing from reactants
+    # find atoms missing from reactants
     map_nums_reac = {a.GetAtomMapNum() for a in rw_reac.GetAtoms()}
     map_nums_prod = {a.GetAtomMapNum() for a in rw_prod.GetAtoms()}
 
     missing_map_nums_reac = [num for num in map_nums_prod if num not in map_nums_reac]
     missing_map_nums_prod = [num for num in map_nums_reac if num not in map_nums_prod]
 
-    # Store new atom indices for later bond creation
+    # store new atom indices for later bond creation
     new_atom_indices_reac = {}
     new_atom_indices_prod = {}
 
-    # Store bonds to add later: (map1, map2, bond_type)
+    # store bonds to add later: (map1, map2, bond_type)
     bonds_to_add_reac = []
     bonds_to_add_prod = []
 
@@ -228,7 +210,7 @@ def balance_reaction(rxn_smiles: str, kekulize: bool = False) -> str:
     rw_reac = Chem.RWMol(Chem.CombineMols(rw_reac, frag_reac))
     rw_prod = Chem.RWMol(Chem.CombineMols(rw_prod, frag_prod))
 
-    # Step 4: Return the balanced reaction SMILES
+    # return the balanced reaction SMILES
     balanced_reac_smi = Chem.MolToSmiles(rw_reac, canonical=False)
     balanced_prod_smi = Chem.MolToSmiles(rw_prod, canonical=False)
-    return balanced_reac_smi + ">>" + balanced_prod_smi
+    return f"{balanced_reac_smi}>>{balanced_prod_smi}"

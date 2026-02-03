@@ -54,7 +54,7 @@ def test_mapped_sr_to_rxn(rxn_id, rxn_smiles, sr_smiles):
 @pytest.mark.parametrize("rxn_id, rxn_smiles, sr_smiles", SR_TEST_CASES)
 def test_unmapped_sr_to_rxn(rxn_id, rxn_smiles, sr_smiles):
     """Check that SR (unmapped) to RXN conversion reproduces an equivalent to the original RXN SMILES."""
-    sr = rxn_to_sr(rxn_smiles, remove_brackets=True, remove_hydrogens=True)
+    sr = rxn_to_sr(rxn_smiles, remove_hydrogens=True)
     assert not is_sr_smiles_fully_atom_mapped(sr)
 
     rxn = sr_to_rxn(sr, add_atom_mapping=True)

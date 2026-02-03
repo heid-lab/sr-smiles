@@ -25,20 +25,20 @@ from sr_smiles.io.logger import logger
 
 
 class SrToRxn:
-    """Transform reaction SMILES into SR-SMILES.
+    """Transform reaction SMILES into sr-SMILES.
 
-    This class provides a callable interface to convert SR-SMILES into reaction
+    This class provides a callable interface to convert sr-SMILES into reaction
     SMILES. It supports single strings, lists of strings, pandas Series, and
     pandas DataFrames.
 
     Attributes:
-        sr_col (Optional[str]): Column name in a DataFrame containing SR-SMILES.
+        sr_col (Optional[str]): Column name in a DataFrame containing sr-SMILES.
         add_atom_mapping (bool, optional): If True, ensures atom mappings are
             present in the output RXN SMILES. If False, atom mappings are stripped
             unless they were already present in the input. Default is False.
 
     Examples:
-        Transform a pandas DataFrame of reactions into SR-SMILES:
+        Transform a pandas DataFrame of reactions into sr-SMILES:
 
         >>> import pandas as pd
         >>> df = pd.read_csv("path/to/file.csv")
@@ -51,22 +51,22 @@ class SrToRxn:
         sr_col: Optional[str] = None,
         add_atom_mapping: bool = False,
     ) -> None:
-        """Initializes the RXN to SR transformation settings."""
+        """Initializes the RXN to sr transformation settings."""
         self.sr_col = sr_col
         self.add_atom_mapping = add_atom_mapping
 
     def __call__(
         self, data: Union[str, List[str], pd.Series, pd.DataFrame]
     ) -> Union[str, List[str], pd.Series, pd.DataFrame]:
-        """Apply the transformation to SR-SMILES.
+        """Apply the transformation to sr-SMILES.
 
         Args:
             data (Union[str, List[str], pd.Series, pd.DataFrame]): Input data
-                containing SR-SMILES. Can be a single string, a list of strings,
+                containing sr-SMILES. Can be a single string, a list of strings,
                 a pandas Series, or a pandas DataFrame.
 
         Returns:
-            Union[str, List[str], pd.Series, pd.DataFrame]: Transformed SR-SMILES
+            Union[str, List[str], pd.Series, pd.DataFrame]: Transformed sr-SMILES
             in the same structure as the input.
 
         Raises:
@@ -97,15 +97,15 @@ class SrToRxn:
 
 
 def sr_to_rxn(sr_smiles: str, add_atom_mapping: bool = False) -> str:
-    """Converts an SR-SMILES string back into a reaction SMILES string.
+    """Converts an sr-SMILES string back into a reaction SMILES string.
 
-    This function reverses a Superimposed Reaction (SR) SMILES representation
+    This function reverses a Superimposed Reaction (sr) SMILES representation
     into standard reaction SMILES (`reactants>>products`). It reconstructs reactant
     and product molecules by removing unspecified bonds, updating stereochemistry,
-    and restoring chirality tags based on the SR annotations.
+    and restoring chirality tags based on the sr annotations.
 
     Args:
-        sr_smiles (str): An SR-SMILES string representing a reaction, where changes
+        sr_smiles (str): An sr-SMILES string representing a reaction, where changes
             between reactants and products are encoded using `{reac|prod}` syntax.
         add_atom_mapping (bool, optional): If True, ensures atom mappings are
             present in the output RXN SMILES. If False, atom mappings are stripped
@@ -115,7 +115,7 @@ def sr_to_rxn(sr_smiles: str, add_atom_mapping: bool = False) -> str:
         str: The corresponding reaction SMILES string in the format "reactants>>products".
 
     Notes:
-        - Each substitution pattern in the SR-SMILES should follow `{...|...}`.
+        - Each substitution pattern in the sr-SMILES should follow `{...|...}`.
         - Unspecified bonds (labeled as "~") are removed in the resulting molecules.
         - This function is the reverse transformation of `rxn_to_sr`.
     """
@@ -123,6 +123,8 @@ def sr_to_rxn(sr_smiles: str, add_atom_mapping: bool = False) -> str:
         return ""
 
     try:
+        sr_smiles = remove_radical_annotations(sr_smiles)
+
         if not is_sr_smiles_fully_atom_mapped(sr_smiles):
             sr_smi = add_atom_mapping_to_sr(sr_smiles)
             input_atom_mapped = False
@@ -155,9 +157,14 @@ def sr_to_rxn(sr_smiles: str, add_atom_mapping: bool = False) -> str:
 
     except Exception as e:
         logger.warning(
-            f"Failure in sr_to_rxn for input '{sr_smiles}'. " f"Error: {e}. Returning empty string."
+            f"Failure in `sr_to_rxn()` for input '{sr_smiles}'. " f"Error: {e}. Returning empty string."
         )
         return ""
+
+
+def remove_radical_annotations(rxn_smi: str) -> str:
+    """Removes radical signs ('^') from a reaction SMILES string."""
+    return rxn_smi.replace("^", "")
 
 
 def _rebuild_side_from_sr(
@@ -166,26 +173,26 @@ def _rebuild_side_from_sr(
     sr_side_name: str,
     kekulized: bool,
 ) -> str:
-    """Rebuilds either the reac or prod molecule from an SR scaffold.
+    """Rebuilds either the reac or prod molecule from an sr-SMILES scaffold.
 
-    This function reconstructs a standard SMILES representation from an SR-side SMILES string by:
+    This function reconstructs a standard SMILES representation from an sr-side SMILES string by:
       1. Parsing bond specifications (including unspecified bonds, '~').
       2. Removing any bonds that are marked as unspecified.
       3. Correcting E/Z double-bond stereochemistry based on parsed bond data.
-      4. Updating chiral tags to ensure stereochemistry consistency with the SR scaffold.
+      4. Updating chiral tags to ensure stereochemistry consistency with the sr-SMILES scaffold.
 
-    It is used internally when decoding SR representations back into reactant or product
+    It is used internally when decoding sr-SMILES representations back into reactant or product
     molecules during reaction reconstruction.
 
     Args:
-        side_smi (str): The SR-side SMILES string representing one part (reactant or product).
-        scaffold (str): The SR scaffold SMILES used as reference for correcting chirality.
+        side_smi (str): The sr-side SMILES string representing one part (reactant or product).
+        scaffold (str): The sr-SMILES scaffold used as reference for correcting chirality.
         sr_side_name (str): The name of the molecule side being processed
             (e.g., "reactant" or "product"), used for logging context.
         kekulized (bool): Whether to output a Kekulé (explicit bond) SMILES.
 
     Returns:
-        str: The rebuilt SMILES string for the given SR side.
+        str: The rebuilt SMILES string for the given sr-SMILES side.
              Returns an empty string if reconstruction fails for any reason.
     """
     try:
@@ -194,17 +201,13 @@ def _rebuild_side_from_sr(
         # extract unspecified bonds to be deleted
         map_nums_unspecified_bonds = [key for key, val in parsed_bonds.items() if val == "~"]
 
-        # duild rdkit mol
+        # build rdkit mol
         mol = Chem.MolFromSmiles(side_smi.replace("~", ""), sanitize=False)
         Chem.SanitizeMol(mol, Chem.SanitizeFlags.SANITIZE_ADJUSTHS)
-
-        # delete unspecified bonds
         mol = remove_bonds_by_atom_map_nums(mol, map_nums_unspecified_bonds)
 
         # fix E/Z stereo
         mol = update_e_z_stereo_chem(mol, parsed_bonds)
-
-        # convert back to SMILES
         smi = Chem.MolToSmiles(mol, canonical=False, kekuleSmiles=kekulized)
 
         # fix chirality
@@ -214,22 +217,22 @@ def _rebuild_side_from_sr(
         return smi
 
     except Exception as e:
-        logger.warning(f"Failed to process SR-SMILES {sr_side_name} side '{side_smi}'. Error: {e}")
+        logger.warning(f"Failed to process sr-SMILES {sr_side_name} side '{side_smi}'. Error: {e}")
         return ""
 
 
 def update_chirality_tags(smiles: str, sr_scaffold: str, chiral_center_map_nums: List[int]) -> str:
-    """Updates chirality tags in a SMILES string based on an SR scaffold.
+    """Updates chirality tags in a SMILES string based on an sr scaffold.
 
     Identifies chiral centers in the provided RDKit molecule (`mol`) by their atom
     map numbers. It then compares the neighborhood of these chiral centers in
-    both the input SMILES (`smiles`) and a reference SR scaffold (`sr_scaffold`)
+    both the input SMILES (`smiles`) and a reference sr scaffold (`sr_scaffold`)
     to determine the chirality tags (@ or @@). If the chirality appears inverted
     between the SMILES and scaffold, the tag is flipped.
 
     Args:
         smiles (str): The input SMILES string of the molecule.
-        sr_scaffold (List[int]): A reference SR-SMILES string containing correct chirality
+        sr_scaffold (List[int]): A reference sr-SMILES string containing correct chirality
             information for comparison.
         chiral_center_map_nums: List of the atom map numbers of the chiral centers.
 
@@ -322,15 +325,15 @@ def update_e_z_stereo_chem(mol: Chem.Mol, parsed_bonds: dict) -> Chem.Mol:
 
 
 def get_reac_prod_scaffold_smiles_from_sr_smiles(sr_smiles: str) -> Tuple[str, str]:
-    """Extracts the reactant and product scaffold SMILES from an SR-SMILES string.
+    """Extracts the reactant and product scaffold SMILES from an sr-SMILES string.
 
-    The SR-SMILES encodes atom-level differences between reactants and products using
+    The sr-SMILES encodes atom-level differences between reactants and products using
     substitution patterns in the form `{reactant|product}`.
     This function decodes those patterns by replacing each `{...|...}` block with the
     appropriate fragment in two parallel SMILES strings: one for the reactant, one for the product.
 
     Args:
-        sr_smiles (str): An SR-SMILES string containing substitution patterns.
+        sr_smiles (str): An sr-SMILES string containing substitution patterns.
 
     Returns:
         Tuple[str, str]: A tuple containing the reactant SMILES and product SMILES

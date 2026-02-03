@@ -66,16 +66,7 @@ REACTION_CASES = [
 
 
 @pytest.mark.parametrize("rxn,expected", REACTION_CASES)
-def test_add_atom_mapping_with_rdkit_graph_overlay(rxn, expected):
-    """Test that add_atom_mapping returns a mapped reaction SMILES for `graph_overlay` method."""
-    mapped_smi = add_atom_mapping(rxn, method="graph_overlay")
-
-    assert isinstance(mapped_smi, str)
-    assert mapped_smi == expected
-
-
-@pytest.mark.parametrize("rxn,expected", REACTION_CASES)
-def test_add_atom_mapping_with_rxn_mapper(rxn, expected):
+def test_add_atom_mapping_with_rxnmapper(rxn, expected):
     """Test that add_atom_mapping returns a mapped reaction SMILES for `rxnmapper` method."""
     mapped_smi = add_atom_mapping(rxn, method="rxnmapper")
 

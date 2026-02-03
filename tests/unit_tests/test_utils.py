@@ -28,11 +28,11 @@ def simple_smiles() -> str:
     return "[C:1][C@:2]([Cl:3])([Br:4])[I:5]"
 
 
-@pytest.fixture
-def complex_smiles() -> Tuple[Chem.Mol, Chem.Mol]:
-    """Provides a complex smiles, including multiple rings and stereochemistry."""
-    smiles = "[C:1]([C@@:2]1([H:11])[O:3][C@@:4]2([H:12])[C:5]([H:13])([H:14])[C:6]([H:15])([H:16])[C@@:7]12[H:17])([H:8])([H:9])[H:10]"  # noqa: E501
-    return smiles
+# @pytest.fixture
+# def complex_smiles() -> Tuple[Chem.Mol, Chem.Mol]:
+#     """Provides a complex smiles, including multiple rings and stereochemistry."""
+#     smiles = "[C:1]([C@@:2]1([H:11])[O:3][C@@:4]2([H:12])[C:5]([H:13])([H:14])[C:6]([H:15])([H:16])[C@@:7]12[H:17])([H:8])([H:9])[H:10]"  # noqa: E501
+#     return smiles
 
 
 # def test_remove_non_participating_hydrogens_unbalanced():
@@ -61,7 +61,7 @@ def complex_smiles() -> Tuple[Chem.Mol, Chem.Mol]:
 
 
 # def test_remove_redundant_square_brackets_sr_smiles():
-#     """Test removal of square brackets from a SR smiles."""
+#     """Test removal of square brackets from a sr-SMILES."""
 #     sr_smiles = "{[O]|[O+]}{=|#}{[C]|[C-]}1{-|~}[H]{~|-}[C]{-|~}1#[C][H]"
 #     sr_wo_am = remove_redundant_square_brackets(sr_smiles)
 #     assert sr_wo_am == "{O|[O+]}{=|#}{C|[C-]}1{-|~}[H]{~|-}C{-|~}1#C[H]"
