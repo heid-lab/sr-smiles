@@ -41,8 +41,7 @@ It  is applicable to any organic reaction of the form `{reactant(s)}>>{product(s
 While atom mappings are required to perform the transformation, the library provides workarounds for unmapped or partially mapped reactions by integrating atom‑mapping tools such as `RXNMapper` [[2]](#references).
 
 Let's take a look at an example:
-![RXN- and sr-SMILES examples](./figures/readme/rxn_vs_sr_smiles.png)
-<!--
+
 **RXN-SMILES:**
 
 <code><span style="color:green">[F-:6]</span>.<span style="color:blue">[Br:1]</span><span style="color:magenta">[C@:2]</span>([H:5])([CH3:3])[NH2:4]>><span style="color:blue">[Br-:1]</span>.[CH3:3]<span style="color:magenta">[C@:2]</span>([H:5])(<span style="color:green">[F:6]</span>)[NH2:4]</code>
@@ -50,7 +49,7 @@ Let's take a look at an example:
 
 **sr‑SMILES**:
 
-<code><span style="color:green">{[F-]|F}</span>{~|-}<span style="color:magenta">{[C@]|[C@@]}</span>({-|~}<span style="color:blue">{Br|[Br-]}</span>)([H])([CH3])[NH2]</code> -->
+<code><span style="color:green">{[F-]|F}</span>{~|-}<span style="color:magenta">{[C@]|[C@@]}</span>({-|~}<span style="color:blue">{Br|[Br-]}</span>)([H])([CH3])[NH2]</code>
 
 👉 Notice how the sr‑SMILES is more compact and explicitly encodes where atoms and bonds change during the reaction.
 
