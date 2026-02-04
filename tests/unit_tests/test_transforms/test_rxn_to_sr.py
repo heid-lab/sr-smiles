@@ -135,7 +135,7 @@ def test_rxn_to_sr_invalid_smiles(propagated_logger, caplog):
     assert len(caplog.records) == 1
     record = caplog.records[0]
     assert record.levelname == "WARNING"
-    assert f"Failed to process RXN-SMILES '{bad_smi}'" in record.message
+    assert f"Failed to process RXN SMILES '{bad_smi}'" in record.message
     assert "Returning empty string." in record.message
 
 
