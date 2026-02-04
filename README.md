@@ -19,7 +19,7 @@
 
 Note: This repository is not yet public and not yet on PyPI, hence the installation is not yet possible via pip. [WIP]
 
-# Superimposed Reaction (SR) SMILES
+# Superimposed reaction (sr) SMILES
 
 <!-- TODO: Add a banner -->
 
@@ -30,12 +30,12 @@ Note: This repository is not yet public and not yet on PyPI, hence the installat
 
 ## Overview
 
-The SR‑SMILES is inspired by the Condensed Graph of Reaction (CGR) representation,
+The sr‑SMILES is inspired by the Condensed Graph of Reaction (CGR) representation,
 a concept originating from graph‑based cheminformatics [[1]](#references).
 
 In a classical CGR, the reactant and product graphs of a chemical reactions are superimposed and represented as a single unified graph. Atoms common to both sides are merged, and bonds are annotated with their changes (e.g., “single → double”, “added”, or “removed”).
 
-SR‑SMILES brings this concept to the string domain, making it suitable for language modeling applications. Instead of representing reactions as separate reactants and products, SR‑SMILES combines them into a compact, local‑change‑aware representation that explicitly encodes how atoms and bonds transform.
+sr‑SMILES brings this concept to the string domain, making it suitable for language modeling applications. Instead of representing reactions as separate reactants and products, SR‑SMILES combines them into a compact, local‑change‑aware representation that explicitly encodes how atoms and bonds transform.
 It  is applicable to any organic reaction of the form `{reactant(s)}>>{product(s)}`.
 
 While atom mappings are required to perform the transformation, the library provides workarounds for unmapped or partially mapped reactions by integrating atom‑mapping tools such as `RXNMapper` [[2]](#references).
@@ -48,11 +48,11 @@ Let's take a look at an example:
 <code><span style="color:green">[F-:6]</span>.<span style="color:blue">[Br:1]</span><span style="color:magenta">[C@:2]</span>([H:5])([CH3:3])[NH2:4]>><span style="color:blue">[Br-:1]</span>.[CH3:3]<span style="color:magenta">[C@:2]</span>([H:5])(<span style="color:green">[F:6]</span>)[NH2:4]</code>
 
 
-**SR‑SMILES**:
+**sr‑SMILES**:
 
 <code><span style="color:green">{[F-]|F}</span>{~|-}<span style="color:magenta">{[C@]|[C@@]}</span>({-|~}<span style="color:blue">{Br|[Br-]}</span>)([H])([CH3])[NH2]</code> -->
 
-👉 Notice how the SR‑SMILES is more compact and explicitly encodes where atoms and bonds change during the reaction.
+👉 Notice how the sr‑SMILES is more compact and explicitly encodes where atoms and bonds change during the reaction.
 
 ---
 
@@ -74,7 +74,7 @@ pip install sr-smiles
 
 The simplest use case involves mapped and balanced reactions. But don’t worry, the library also handles unmapped or unbalanced cases.
 
-There are several ways to use SR‑SMILES depending on your workflow:
+There are several ways to use sr‑SMILES depending on your workflow:
 
 1. **Core functions** (simple, flexible)
     - `rxn_to_sr()`
@@ -98,7 +98,7 @@ from sr_smiles import SrToRxn, RxnToSr, sr_to_rxn, rxn_to_sr
 
 ### 1. Core functions (`rxn_to_sr()` and `sr_to_rxn()`)
 
-These are the best place to start when exploring SR‑SMILES. They provide a simple, direct way to understand how the library transforms reactions between RXN and sr-SMILES.
+These are the best place to start when exploring sr‑SMILES. They provide a simple, direct way to understand how the library transforms reactions between RXN and sr-SMILES.
 
 ```python
 rxn_smiles = "[F-:6].[Br:1][C@:2]([H:5])([CH3:3])[NH2:4]>>[Br-:1].[CH3:3][C@:2]([H:5])([F:6])[NH2:4]"
@@ -131,7 +131,7 @@ RXN SMILES (without mapping numbers):
 
 These offer a convenient, efficient interface for practical use, as they are ideal for processing large datasets or handling more complex cases like unmapped and unbalanced reactions.
 
-**RXN to SR:**
+**RXN to sr-SMILES:**
 ```python
 import pandas as pd
 
@@ -161,7 +161,7 @@ sr-SMILES:
 	[O]([C@@]([C]1{=|-}[O]{~|-}[H]{-|~}1)([C]#[C][H])[H])[H]
 ```
 
-**And sr back to RXN:**
+**And sr-SMILES back to RXN:**
 ```python
 transform_to_rxn = SrToRxn(add_atom_mapping=True)
 rxns = transform_to_rxn(sr_results)
@@ -209,10 +209,10 @@ DataFrame with sr-SMILES:
 If your prefer working with a CLI tool , that be it:
 
 ```bash
-╭────────── 🚀 SR‑SMILES Converter v0.0.1 ────-─────╮
+╭────────── 🚀 sr‑SMILES Converter v0.0.1 ────-─────╮
 │                                                   │
-│   👋 Welcome to SR‑SMILES                         │
-│   Transforming Reaction SMILES ➡️ SR‑SMILES       │
+│   👋 Welcome to sr‑SMILES                         │
+│   Transforming Reaction SMILES ➡️ sr‑SMILES       │
 │                                                   │
 │   Input column:   'rxn_smiles'                    │
 │   Output column:  'sr_smiles'                     │
