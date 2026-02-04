@@ -67,8 +67,8 @@ REACTION_CASES = [
 
 @pytest.mark.parametrize("rxn,expected", REACTION_CASES)
 def test_add_atom_mapping_with_rxnmapper(rxn, expected):
-    """Test that add_atom_mapping returns a mapped reaction SMILES for `rxnmapper` method."""
-    mapped_smi = add_atom_mapping(rxn, method="rxnmapper")
+    """Test that add_atom_mapping returns a reaction SMILES mapped with RXNMapper."""
+    mapped_smi = add_atom_mapping(rxn)
 
     assert isinstance(mapped_smi, str)
     assert equivalent_reactions(mapped_smi, expected)
