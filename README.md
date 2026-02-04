@@ -41,7 +41,7 @@ It  is applicable to any organic reaction of the form `{reactant(s)}>>{product(s
 While atom mappings are required to perform the transformation, the library provides workarounds for unmapped or partially mapped reactions by integrating atom‑mapping tools such as `RXNMapper` [[2]](#references).
 
 Let's take a look at an example:
-![RXN- and sr-SMILES examples](./figures/readme/rxn_vs_sr_smiles.png)
+![RXN- and sr-SMILES examples](./figures/readme_rxn_vs_sr_smiles.png)
 <!--
 **RXN-SMILES:**
 
