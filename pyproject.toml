@@ -1,7 +1,7 @@
 [project]
 name = "sr-smiles"
 version = "0.1.0"
-description = "A Python library to convert reaction SMILES into superimposed reaction (SR) SMILES."
+description = "A Python library to convert reaction SMILES into superimposed reaction (sr) SMILES."
 authors = [
     {name = "Charlotte Gerhaher", email = "charlotte.gerhaher@tuwien.ac.at"}
 ]
