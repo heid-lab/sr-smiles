@@ -10,9 +10,9 @@ assignees: ''
 A clear description of the bug.
 
 ## Steps to reproduce
-1. 
-2. 
-3. 
+1.
+2.
+3.
 
 ## Error message
 Paste error/traceback here.
