@@ -9,8 +9,6 @@
 <!-- [![Coverage](https://codecov.io/gh/heid-lab/sr-smiles/branch/main/graph/badge.svg)](https://codecov.io/gh/heid-lab/sr-smiles) -->
 <!-- [![Downloads](https://img.shields.io/github/downloads/heid-lab/sr-smiles/total.svg)](https://github.com/heid-lab/sr-smiles/releases) -->
 
-</div align="center">
-
 [Overview](#overview) | [Installation](#installation) | [Usage](#usage) | [Contributing](#contributing) | [Citation](#citation) | [References](#references)
 
 </div>
