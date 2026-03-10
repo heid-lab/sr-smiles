@@ -1,4 +1,3 @@
-
 ---
 name: Unexpected SMILES behavior
 about: Report unexpected behavior for a specific reaction SMILES
