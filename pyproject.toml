@@ -5,13 +5,14 @@ description = "A Python library to convert reaction SMILES into superimposed rea
 authors = [
     {name = "Charlotte Gerhaher", email = "charlotte.gerhaher@tuwien.ac.at"}
 ]
-license = {text = "MIT"}
+license = "MIT"
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
     "rdkit",
     "pandas (>=2.3.2,<3.0.0)",
-    "rich (>=14.1.0,<15.0.0)"
+    "rich (>=14.1.0,<15.0.0)",
+    "tqdm (>=4.67.3,<5.0.0)"
 ]
 
 [project.scripts]
