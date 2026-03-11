@@ -2,6 +2,7 @@
 <div align="center">
 
 <img src="figures/readme-logo.png" alt="sr-SMILES logo" width="500"/>
+<br/><br/>
 
 [![PyPI](https://img.shields.io/pypi/v/sr-smiles.svg)](https://pypi.org/project/sr-smiles/)
 [![Python versions](https://img.shields.io/badge/python-%3E%3D3.9-blue)](https://pypi.org/project/sr-smiles)
@@ -11,6 +12,8 @@
 <!-- [![Downloads](https://img.shields.io/github/downloads/heid-lab/sr-smiles/total.svg)](https://github.com/heid-lab/sr-smiles/releases) -->
 
 [Overview](#overview) | [Installation](#installation) | [Usage](#usage) | [Contributing](#contributing) | [Citation](#citation) | [References](#references)
+
+<br/>
 
 </div>
 
