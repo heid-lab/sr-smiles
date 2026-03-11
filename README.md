@@ -1,6 +1,7 @@
 
 <div align="center">
 
+<img src="figures/readme-logo.png" alt="sr-SMILES logo" width="500"/>
 
 [![PyPI](https://img.shields.io/pypi/v/sr-smiles.svg)](https://pypi.org/project/sr-smiles/)
 [![Python versions](https://img.shields.io/badge/python-%3E%3D3.9-blue)](https://pypi.org/project/sr-smiles)
