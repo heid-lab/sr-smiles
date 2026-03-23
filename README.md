@@ -263,7 +263,7 @@ If you use this work, please cite:
 ```bibtex
 @article{sulpizio2026bridging,
   author  = {Sulpizio, Giustino and Gerhaher, Charlotte and Heid, Esther and Jorner, Kjell},
-  title   = {Bridging {CGR} Representations and Language Models for Reaction Property Prediction},
+  title   = {Bridging CGR Representations and Language Models for Reaction Property Prediction},
   journal = {ChemRxiv},
   year    = {2026},
   doi     = {10.26434/chemrxiv.15000926/v1},
