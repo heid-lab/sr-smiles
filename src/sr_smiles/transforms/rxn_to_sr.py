@@ -1,4 +1,7 @@
 import re
+from concurrent.futures import ProcessPoolExecutor
+from functools import partial
+from os import cpu_count
 from typing import Dict, List, Optional, Tuple, Union
 
 import pandas as pd
@@ -32,6 +35,26 @@ from sr_smiles.chem_utils.stereo_chem_utils import (
 )
 from sr_smiles.io.logger import logger
 from sr_smiles.reaction_balancing import balance_reaction, is_balanced
+
+
+def _rxn_to_sr_worker(
+    rxn_smi: str,
+    *,
+    keep_atom_mapping: bool,
+    remove_hydrogens: bool,
+    balance_rxn: bool,
+    kekulize: bool,
+    keep_aromatic_bonds: bool,
+) -> str:
+    """Multiprocessing-safe worker for `rxn_to_sr`."""
+    return rxn_to_sr(
+        rxn_smi,
+        keep_atom_mapping=keep_atom_mapping,
+        remove_hydrogens=remove_hydrogens,
+        balance_rxn=balance_rxn,
+        kekulize=kekulize,
+        keep_aromatic_bonds=keep_aromatic_bonds,
+    )
 
 
 class RxnToSr:
@@ -75,6 +98,7 @@ class RxnToSr:
         kekulize: bool = False,
         keep_aromatic_bonds: bool = True,
         use_rxnmapper: bool = False,
+        n_jobs: int = 1,
     ) -> None:
         """Initializes the RXN to sr transformation settings."""
         self.keep_atom_mapping = keep_atom_mapping
@@ -84,6 +108,7 @@ class RxnToSr:
         self.kekulize = kekulize
         self.keep_aromatic_bonds = keep_aromatic_bonds
         self.use_rxnmapper = use_rxnmapper
+        self.n_jobs = n_jobs
         self.init_mapper()
 
     def init_mapper(self) -> None:
@@ -103,6 +128,52 @@ class RxnToSr:
 
         else:
             self.rxnmapper = IdentityMapper()
+
+    def _effective_n_jobs(self) -> int:
+        """Return resolved number of worker processes."""
+        if self.n_jobs is None:
+            return 1
+        if self.n_jobs <= 0:
+            return cpu_count() or 1
+        return self.n_jobs
+
+    def _map_batch(self, rxns: list[str]) -> list[str]:
+        """Apply mapping step in the current process."""
+        return [self.rxnmapper(r) for r in rxns]
+
+    def _transform_batch(self, rxns: list[str]) -> list[str]:
+        """Transform a batch, optionally using multiprocessing."""
+        n_jobs = self._effective_n_jobs()
+        if n_jobs == 1 or len(rxns) < 2:
+            return [
+                _rxn_to_sr_worker(
+                    r,
+                    keep_atom_mapping=self.keep_atom_mapping,
+                    remove_hydrogens=self.remove_hydrogens,
+                    balance_rxn=self.balance_rxn,
+                    kekulize=self.kekulize,
+                    keep_aromatic_bonds=self.keep_aromatic_bonds,
+                )
+                for r in rxns
+            ]
+
+        # On Windows, ProcessPool uses spawn; keep worker top-level and pass only primitives.
+        worker = partial(
+            _rxn_to_sr_worker,
+            keep_atom_mapping=self.keep_atom_mapping,
+            remove_hydrogens=self.remove_hydrogens,
+            balance_rxn=self.balance_rxn,
+            kekulize=self.kekulize,
+            keep_aromatic_bonds=self.keep_aromatic_bonds,
+        )
+        with ProcessPoolExecutor(max_workers=n_jobs) as ex:
+            return list(
+                ex.map(
+                    worker,
+                    rxns,
+                    chunksize=max(1, len(rxns) // (n_jobs * 4)),
+                )
+            )
 
     def __call__(
         self, data: Union[str, List[str], pd.Series, pd.DataFrame]
@@ -133,7 +204,8 @@ class RxnToSr:
             )
 
         elif isinstance(data, list):
-            result = [self(d) for d in data]
+            mapped = self._map_batch(data)
+            result = self._transform_batch(mapped)
             n_res = len(result)
             n_empty = sum(item == "" for item in result)
             if result and n_empty:
@@ -143,7 +215,11 @@ class RxnToSr:
             return result
 
         elif isinstance(data, pd.Series):
-            return data.apply(self)
+            # Preserve index; avoid pandas per-row overhead when parallelizing.
+            rxns = data.astype(str).tolist()
+            mapped = self._map_batch(rxns)
+            out = self._transform_batch(mapped)
+            return pd.Series(out, index=data.index, name=data.name)
 
         elif isinstance(data, pd.DataFrame):
             if self.rxn_col is None:
@@ -152,7 +228,10 @@ class RxnToSr:
                     f"Available columns are: {list(data.columns)}\n"
                     "Specify the correct column name in the constructor."
                 )
-            return data[self.rxn_col].apply(self)
+            series = data[self.rxn_col].astype(str)
+            mapped = self._map_batch(series.tolist())
+            out = self._transform_batch(mapped)
+            return pd.Series(out, index=series.index, name=self.rxn_col)
 
         else:
             raise TypeError("Input must be str, list, pandas Series, or DataFrame.")
