@@ -1,4 +1,7 @@
 import re
+from concurrent.futures import ProcessPoolExecutor
+from functools import partial
+from os import cpu_count
 from typing import List, Optional, Tuple, Union
 
 import pandas as pd
@@ -22,6 +25,11 @@ from sr_smiles.chem_utils.smiles_utils import (
 )
 from sr_smiles.chem_utils.stereo_chem_utils import find_e_z_stereo_bonds, get_chiral_center_map_nums
 from sr_smiles.io.logger import logger
+
+
+def _sr_to_rxn_worker(sr_smiles: str, *, add_atom_mapping: bool) -> str:
+    """Multiprocessing-safe worker for `sr_to_rxn`."""
+    return sr_to_rxn(sr_smiles, add_atom_mapping=add_atom_mapping)
 
 
 class SrToRxn:
@@ -50,10 +58,36 @@ class SrToRxn:
         self,
         sr_col: Optional[str] = None,
         add_atom_mapping: bool = False,
+        n_jobs: int = 1,
     ) -> None:
         """Initializes the RXN to sr transformation settings."""
         self.sr_col = sr_col
         self.add_atom_mapping = add_atom_mapping
+        self.n_jobs = n_jobs
+
+    def _effective_n_jobs(self) -> int:
+        """Return resolved number of worker processes."""
+        if self.n_jobs is None:
+            return 1
+        if self.n_jobs <= 0:
+            return cpu_count() or 1
+        return self.n_jobs
+
+    def _transform_batch(self, srs: list[str]) -> list[str]:
+        """Transform a batch, optionally using multiprocessing."""
+        n_jobs = self._effective_n_jobs()
+        if n_jobs == 1 or len(srs) < 2:
+            return [_sr_to_rxn_worker(s, add_atom_mapping=self.add_atom_mapping) for s in srs]
+
+        worker = partial(_sr_to_rxn_worker, add_atom_mapping=self.add_atom_mapping)
+        with ProcessPoolExecutor(max_workers=n_jobs) as ex:
+            return list(
+                ex.map(
+                    worker,
+                    srs,
+                    chunksize=max(1, len(srs) // (n_jobs * 4)),
+                )
+            )
 
     def __call__(
         self, data: Union[str, List[str], pd.Series, pd.DataFrame]
@@ -77,10 +111,12 @@ class SrToRxn:
             return sr_to_rxn(data, self.add_atom_mapping)
 
         elif isinstance(data, list):
-            return [self(d) for d in data]
+            return self._transform_batch(data)
 
         elif isinstance(data, pd.Series):
-            return data.apply(self)
+            srs = data.astype(str).tolist()
+            out = self._transform_batch(srs)
+            return pd.Series(out, index=data.index, name=data.name)
 
         elif isinstance(data, pd.DataFrame):
             if self.sr_col is None:
@@ -90,7 +126,9 @@ class SrToRxn:
                     "Please specify the column name containing the reactions by setting "
                     "`sr_col` at time of initialization."
                 )
-            return data[self.sr_col].apply(self)
+            series = data[self.sr_col].astype(str)
+            out = self._transform_batch(series.tolist())
+            return pd.Series(out, index=series.index, name=self.sr_col)
 
         else:
             raise TypeError("Input must be str, list, pandas Series, or DataFrame.")
