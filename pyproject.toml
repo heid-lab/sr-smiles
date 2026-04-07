@@ -7,7 +7,7 @@ authors = [
 ]
 license = "MIT"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
     "rdkit (>=2025.09.3)",
     "pandas (>=2.3.2,<3.0.0)",
