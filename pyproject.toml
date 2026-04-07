@@ -20,7 +20,7 @@ rxn2sr = "sr_smiles.io.cli:main_rxn2sr"
 sr2rxn = "sr_smiles.io.cli:main_sr2rxn"
 
 [project.optional-dependencies]
-rxnmapper = ["rxnmapper (>=0.4.2,<0.5.0)"]
+rxnmapper = ["rxnmapper (>=0.4.2,<0.5.0)", "setuptools"]
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

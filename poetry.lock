@@ -3014,7 +3014,7 @@ description = "Most extensible Python build backend with support for C/C++ exten
 optional = true
 python-versions = ">=3.9"
 groups = ["main"]
-markers = "extra == \"rxnmapper\" and python_version >= \"3.12\""
+markers = "python_version >= \"3.12\" and extra == \"rxnmapper\""
 files = [
     {file = "setuptools-82.0.1-py3-none-any.whl", hash = "sha256:a59e362652f08dcd477c78bb6e7bd9d80a7995bc73ce773050228a348ce2e5bb"},
     {file = "setuptools-82.0.1.tar.gz", hash = "sha256:7d872682c5d01cfde07da7bccc7b65469d3dca203318515ada1de5eda35efbf9"},
@@ -3517,9 +3517,9 @@ python-discovery = ">=1"
 typing-extensions = {version = ">=4.13.2", markers = "python_version < \"3.11\""}
 
 [extras]
-rxnmapper = ["rxnmapper"]
+rxnmapper = ["rxnmapper", "setuptools"]
 
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10"
-content-hash = "48d4f86643f0f924d9f8af84ec0a6a35448b77ab1dc7f9561ef8eafbf362be87"
+content-hash = "09596ce5575f226d98d41652a49181b23b60e146ee25489a7dd90b8c21fd0a4c"
