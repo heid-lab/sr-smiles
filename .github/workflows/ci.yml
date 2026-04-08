@@ -48,24 +48,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - python-version: "3.12"
-            rdkit-version: "2025.03.5"
-          - python-version: "3.12"
-            rdkit-version: "2024.09.5"
-
-          - python-version: "3.11"
-            rdkit-version: "2025.03.5"
-          - python-version: "3.11"
-            rdkit-version: "2024.03.5"
-          - python-version: "3.11"
-            rdkit-version: "2023.09.5"
-
-          - python-version: "3.10"
-            rdkit-version: "2025.03.5"
-
-          - python-version: "3.9"
-            rdkit-version: "2025.03.5"
+        python-version: ["3.10", "3.11", "3.12"]
+        rdkit-version: ["2025.09.3", "latest"]
 
     needs: setup
     steps:
@@ -80,7 +64,12 @@ jobs:
         run: pip install "poetry>=1.8.0"
 
       - name: Install RDKit
-        run: conda install -c conda-forge python=${{ matrix.python-version }} rdkit=${{ matrix.rdkit-version }} -y
+        run: |
+          if [ "${{ matrix.rdkit-version }}" = "latest" ]; then
+            conda install -c conda-forge python=${{ matrix.python-version }} rdkit -y
+          else
+            conda install -c conda-forge python=${{ matrix.python-version }} rdkit=${{ matrix.rdkit-version }} -y
+          fi
 
       - name: Install dependencies
         run: poetry install --with dev --extras "rxnmapper"

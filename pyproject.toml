@@ -1,15 +1,15 @@
 [project]
 name = "sr-smiles"
-version = "0.1.2"
+version = "0.2.0"
 description = "A Python library to convert reaction SMILES into superimposed reaction (sr) SMILES."
 authors = [
     {name = "Charlotte Gerhaher", email = "charlotte.gerhaher@tuwien.ac.at"}
 ]
 license = "MIT"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
-    "rdkit",
+    "rdkit (>=2025.09.3)",
     "pandas (>=2.3.2,<3.0.0)",
     "rich (>=14.1.0,<15.0.0)",
     "tqdm (>=4.67.3,<5.0.0)"
@@ -20,7 +20,7 @@ rxn2sr = "sr_smiles.io.cli:main_rxn2sr"
 sr2rxn = "sr_smiles.io.cli:main_sr2rxn"
 
 [project.optional-dependencies]
-rxnmapper = ["rxnmapper (>=0.4.2,<0.5.0)"]
+rxnmapper = ["rxnmapper (>=0.4.2,<0.5.0)", "setuptools (<81)"]
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
