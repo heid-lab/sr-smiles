@@ -87,6 +87,9 @@ class RxnToSr:
         use_rxnmapper (bool): If True, use RXNMapper for atom mapping before
             sr transformation. Requires the rxnmapper package to be installed.
             Defaults to False.
+        n_jobs (int): Number of parallel worker processes for batch transforms.
+            Defaults to 1 (serial). Set to a positive integer to use that many
+            workers, or 0 / negative to use all available CPU cores.
     """
 
     def __init__(

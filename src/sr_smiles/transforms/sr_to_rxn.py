@@ -44,6 +44,9 @@ class SrToRxn:
         add_atom_mapping (bool, optional): If True, ensures atom mappings are
             present in the output RXN SMILES. If False, atom mappings are stripped
             unless they were already present in the input. Default is False.
+        n_jobs (int): Number of parallel worker processes for batch transforms.
+            Defaults to 1 (serial). Set to a positive integer to use that many
+            workers, or 0 / negative to use all available CPU cores.
 
     Examples:
         Transform a pandas DataFrame of reactions into sr-SMILES:
