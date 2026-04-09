@@ -164,3 +164,136 @@ def test_RxnToSr_roundtrip_with_mapping(
         f"Round-trip mismatch for sample {file_path}:{idx} "
         f"using use_rxnmapper={forward_transformer.use_rxnmapper}"
     )
+
+
+@pytest.mark.parametrize("n_jobs", [-1, 2, 1, 0])
+def test_RxnToSr_parallel_vs_serial(n_jobs):
+    """Verify that parallel processing (n_jobs != 1) yields identical results to serial."""
+    # Use the first 5 reactions from the pre‑defined subset
+    batch_size = 5
+    rxn_smiles_list = [case[2] for case in subset_test_cases[:batch_size]]
+
+    # Create transformers with identical settings except n_jobs
+    # Use keep_atom_mapping=True for consistency, use_rxnmapper=False for speed
+    transformer_serial = RxnToSr(
+        keep_atom_mapping=True,
+        remove_hydrogens=False,
+        balance_rxn=False,
+        kekulize=False,
+        keep_aromatic_bonds=True,
+        use_rxnmapper=False,
+        n_jobs=1,
+    )
+    transformer_parallel = RxnToSr(
+        keep_atom_mapping=True,
+        remove_hydrogens=False,
+        balance_rxn=False,
+        kekulize=False,
+        keep_aromatic_bonds=True,
+        use_rxnmapper=False,
+        n_jobs=n_jobs,
+    )
+
+    # Transform the batch with both transformers
+    results_serial = transformer_serial(rxn_smiles_list)
+    results_parallel = transformer_parallel(rxn_smiles_list)
+
+    # Compare results
+    assert len(results_serial) == len(results_parallel) == batch_size
+    for i, (sr_serial, sr_parallel) in enumerate(zip(results_serial, results_parallel)):
+        assert sr_serial == sr_parallel, (
+            f"Parallel (n_jobs={n_jobs}) output differs from serial at index {i}. "
+            f"Reaction: {rxn_smiles_list[i]}, serial: {sr_serial}, parallel: {sr_parallel}"
+        )
+
+
+@pytest.mark.parametrize("n_jobs", [-1, 2, 1, 0])
+def test_SrToRxn_parallel_vs_serial(n_jobs):
+    """Verify parallel processing yields identical results to serial for backward transformation."""
+    # Use the first 5 reactions from the pre‑defined subset, convert them to sr-SMILES first
+    batch_size = 5
+    rxn_smiles_list = [case[2] for case in subset_test_cases[:batch_size]]
+
+    # Convert to sr-SMILES using serial transformer
+    forward_transformer = RxnToSr(
+        keep_atom_mapping=True,
+        remove_hydrogens=False,
+        balance_rxn=False,
+        kekulize=False,
+        keep_aromatic_bonds=True,
+        use_rxnmapper=False,
+        n_jobs=1,
+    )
+    sr_smiles_list = forward_transformer(rxn_smiles_list)
+
+    # Create backward transformers with identical settings except n_jobs
+    transformer_serial = SrToRxn(add_atom_mapping=True, n_jobs=1)
+    transformer_parallel = SrToRxn(add_atom_mapping=True, n_jobs=n_jobs)
+
+    # Transform the batch with both transformers
+    results_serial = transformer_serial(sr_smiles_list)
+    results_parallel = transformer_parallel(sr_smiles_list)
+
+    # Compare results
+    assert len(results_serial) == len(results_parallel) == batch_size
+    for i, (rxn_serial, rxn_parallel) in enumerate(zip(results_serial, results_parallel)):
+        assert rxn_serial == rxn_parallel, (
+            f"Parallel (n_jobs={n_jobs}) output differs from serial at index {i}. "
+            f"sr-SMILES: {sr_smiles_list[i]}, serial: {rxn_serial}, parallel: {rxn_parallel}"
+        )
+
+
+@pytest.mark.parametrize("n_jobs_forward", [-1, 2])
+@pytest.mark.parametrize("n_jobs_backward", [-1, 2])
+def test_roundtrip_with_parallel_processing(n_jobs_forward, n_jobs_backward):
+    """Ensure round-trip RXN → sr → RXN equivalence with parallel processing matches serial output."""
+    # Use a single reaction for simplicity
+    test_case = subset_test_cases[0]
+    rxn_smiles = test_case[2]
+
+    # Create serial transformers (baseline)
+    forward_serial = RxnToSr(
+        keep_atom_mapping=True,
+        remove_hydrogens=False,
+        balance_rxn=False,
+        kekulize=False,
+        keep_aromatic_bonds=True,
+        use_rxnmapper=False,
+        n_jobs=1,
+    )
+    backward_serial = SrToRxn(add_atom_mapping=True, n_jobs=1)
+
+    # Create parallel transformers
+    forward_parallel = RxnToSr(
+        keep_atom_mapping=True,
+        remove_hydrogens=False,
+        balance_rxn=False,
+        kekulize=False,
+        keep_aromatic_bonds=True,
+        use_rxnmapper=False,
+        n_jobs=n_jobs_forward,
+    )
+    backward_parallel = SrToRxn(add_atom_mapping=True, n_jobs=n_jobs_backward)
+
+    # Perform serial roundtrip (baseline)
+    sr_serial = forward_serial(rxn_smiles)
+    rxn_back_serial = backward_serial(sr_serial)
+
+    # Perform parallel roundtrip
+    sr_parallel = forward_parallel(rxn_smiles)
+    rxn_back_parallel = backward_parallel(sr_parallel)
+
+    # 1. Verify both roundtrips are correct (equivalent to original)
+    assert are_equivalent_rxn_smiles(
+        rxn_smiles, rxn_back_serial
+    ), f"Serial round-trip mismatch. Original: {rxn_smiles}, Roundtrip: {rxn_back_serial}"
+    assert are_equivalent_rxn_smiles(rxn_smiles, rxn_back_parallel), (
+        f"Parallel round-trip mismatch (n_jobs_forward={n_jobs_forward}, "
+        f"n_jobs_backward={n_jobs_backward}). Original: {rxn_smiles}, Roundtrip: {rxn_back_parallel}"
+    )
+
+    # 2. Verify parallel output matches serial output
+    assert are_equivalent_rxn_smiles(rxn_back_serial, rxn_back_parallel), (
+        f"Parallel output differs from serial (n_jobs_forward={n_jobs_forward}, "
+        f"n_jobs_backward={n_jobs_backward}). Serial: {rxn_back_serial}, Parallel: {rxn_back_parallel}"
+    )
