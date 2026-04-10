@@ -5,7 +5,7 @@
 <br/><br/>
 
 [![PyPI](https://img.shields.io/pypi/v/sr-smiles.svg)](https://pypi.org/project/sr-smiles/)
-[![Python versions](https://img.shields.io/pypi/pyversions/sr-smiles.svg)](https://pypi.org/project/sr-smiles)
+[![Python](https://img.shields.io/badge/dynamic/toml?url=https://raw.githubusercontent.com/heid-lab/sr-smiles/main/pyproject.toml&query=$.project.requires-python&label=python&color=blue)](https://pypi.org/project/sr-smiles)
 [![License](https://img.shields.io/github/license/heid-lab/sr-smiles)](https://github.com/heid-lab/sr-smiles/blob/main/LICENSE)
 [![Test](https://github.com/heid-lab/sr-smiles/actions/workflows/ci.yml/badge.svg)](https://github.com/heid-lab/sr-smiles/actions)
 [![Coverage](https://codecov.io/gh/heid-lab/sr-smiles/branch/main/graph/badge.svg)](https://codecov.io/gh/heid-lab/sr-smiles)
