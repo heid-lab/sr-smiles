@@ -1,11 +1,11 @@
 
 <div align="center">
 
-<img src="figures/readme-logo.png" alt="sr-SMILES logo" width="500"/>
+<img src="https://raw.githubusercontent.com/heid-lab/sr-smiles/main/figures/readme-logo.png" alt="sr-SMILES logo" width="500"/>
 <br/><br/>
 
 [![PyPI](https://img.shields.io/pypi/v/sr-smiles.svg)](https://pypi.org/project/sr-smiles/)
-[![Python versions](https://img.shields.io/badge/python-%3E%3D3.9-blue)](https://pypi.org/project/sr-smiles)
+[![Python versions](https://img.shields.io/pypi/pyversions/sr-smiles.svg)](https://pypi.org/project/sr-smiles)
 [![License](https://img.shields.io/github/license/heid-lab/sr-smiles)](https://github.com/heid-lab/sr-smiles/blob/main/LICENSE)
 [![Test](https://github.com/heid-lab/sr-smiles/actions/workflows/ci.yml/badge.svg)](https://github.com/heid-lab/sr-smiles/actions)
 [![Coverage](https://codecov.io/gh/heid-lab/sr-smiles/branch/main/graph/badge.svg)](https://codecov.io/gh/heid-lab/sr-smiles)
